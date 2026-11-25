@@ -1,0 +1,10 @@
+- id: limberis-2024-turbolysis
+  type: article
+  title: "turboLysis: a low-cost, small-footprint alternative to commercial bead beaters for cell lysis."
+  authors: [Limberis JD, Metcalfe JZ]
+  role: first
+  journal: HardwareX
+  year: 2024
+  citation: "19:e00576"
+  doi: 10.1016/j.ohx.2024.e00576
+  pmid: "39280234"

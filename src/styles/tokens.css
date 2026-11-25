@@ -1,0 +1,76 @@
+/* Design tokens. Dark is the default; light is opt-in via the toggle. */
+:root {
+  color-scheme: dark;
+
+  --bg: #0b0d10;
+  --surface: #12151a;
+  --surface-2: #1a1e25;
+  --text: #e6e8eb;
+  --muted: #9aa3af;
+  --faint: #7d8794;
+  --border: #2a303a;
+  --border-strong: #647082;
+
+  /* Orange from the SQ mark. --accent-text is the only orange safe for text. */
+  --accent: #f7941d;
+  --accent-text: #f7941d;
+  --accent-ink: #0b0d10; /* text on an accent fill */
+  --accent-soft: rgb(247 148 29 / 0.12);
+  --accent-2: #ef4a37; /* decorative only, never text */
+  --accent-3: #fbb040; /* decorative only, never text */
+
+  --ok: #5bd39a;
+  --warn: #f2c14e;
+  --idle: #7d8794;
+
+  --font-sans: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-md: 1.125rem;
+  --fs-lg: 1.375rem;
+  --fs-xl: clamp(1.6rem, 1.2rem + 1.6vw, 2.25rem);
+  --fs-2xl: clamp(2.1rem, 1.3rem + 3.6vw, 4rem);
+
+  --lh-tight: 1.15;
+  --lh-body: 1.6;
+
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4.5rem;
+  --s-9: 7rem;
+
+  --maxw: 72rem;
+  --measure: 68ch;
+  --gutter: clamp(1rem, 4vw, 2rem);
+  --radius: 2px;
+  --hair: 1px solid var(--border);
+  --dur: 150ms;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #faf9f6;
+  --surface: #ffffff;
+  --surface-2: #f1efea;
+  --text: #16181c;
+  --muted: #5a616b;
+  --faint: #6b665c;
+  --border: #d9d6cf;
+  --border-strong: #8a857b;
+
+  --accent-text: #a84a00;
+  --accent-soft: rgb(247 148 29 / 0.16);
+
+  --ok: #1c7a4d;
+  --warn: #8a6100;
+  --idle: #6b665c;
+}

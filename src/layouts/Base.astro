@@ -1,0 +1,52 @@
+---
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+import '../styles/global.css';
+import Seo from '../components/seo/Seo.astro';
+import { profile } from '../data/profile';
+
+interface Props {
+  /** Page title without the site suffix. Omit on the home page. */
+  title?: string;
+  description?: string;
+  /** Social card image path. Defaults to the site card. */
+  image?: string;
+  type?: 'website' | 'article' | 'profile';
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description = `${profile.name}: ${profile.role} at ${profile.affiliation.orgShort}.`,
+  image,
+  type,
+  jsonLd,
+  noindex,
+} = Astro.props;
+const fullTitle = title ? `${title} | ${profile.shortName}` : `${profile.name} | ${profile.brand}`;
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <Seo title={fullTitle} description={description} image={image} type={type} jsonLd={jsonLd} noindex={noindex} />
+    <script is:inline>
+      try {
+        var t = localStorage.getItem('theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="visually-hidden" href="#main">Skip to content</a>
+    <main id="main">
+      <slot />
+    </main>
+  </body>
+</html>

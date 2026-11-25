@@ -1,0 +1,15 @@
+---
+import Base from '../layouts/Base.astro';
+import { getCollection, getEntry } from 'astro:content';
+const pubs = await getCollection('publications');
+const projects = await getCollection('projects');
+const exp = await getCollection('experience');
+const p0 = projects[0];
+const linked = p0 ? await Promise.all(p0.data.publications.map((r) => getEntry(r))) : [];
+---
+<Base>
+  <div class="wrap">
+    <h1>Scaffold</h1>
+    <p class="mono">{pubs.length} pubs, {projects.length} projects, {exp.length} roles, linked: {linked.map((l) => l?.id).join(',')}</p>
+  </div>
+</Base>
