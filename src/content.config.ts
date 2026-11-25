@@ -66,6 +66,8 @@ const projects = defineCollection({
         })
         .default({}),
       publications: z.array(reference('publications')).default([]),
+      /** Authors in citation order, only when the owner is not the sole author. Used in JSON-LD. */
+      authors: z.array(z.string()).optional(),
       grant: reference('grants').optional(),
       stats: z.array(z.object({ label: z.string(), value: z.string() })).default([]),
       cover: image().optional(),
@@ -86,10 +88,20 @@ const builds = defineCollection({
       cost: z.string().optional(),
       order: z.number().default(100),
       images: z.array(z.object({ src: image(), alt: z.string() })).default([]),
-      youtube: z.array(z.object({ id: z.string(), title: z.string() })).default([]),
+      /** poster: local thumbnail (src/assets/builds/yt-<id>.jpg), so no request goes to YouTube before a click. */
+      youtube: z.array(z.object({ id: z.string(), title: z.string(), poster: image() })).default([]),
       /** Self-hosted clips under public/video/. */
       videos: z
-        .array(z.object({ src: z.string(), poster: z.string().optional(), title: z.string() }))
+        .array(
+          z.object({
+            src: z.string(),
+            poster: z.string().optional(),
+            title: z.string(),
+            /** Pixel size of the clip, so portrait clips keep their shape. */
+            width: z.number().optional(),
+            height: z.number().optional(),
+          }),
+        )
         .default([]),
       links: z.object({ files: url.optional(), repo: url.optional() }).default({}),
     }),

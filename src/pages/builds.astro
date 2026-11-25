@@ -1,6 +1,6 @@
 ---
 /**
- * /builds/: a workshop log of homemade labware. One section per entry of
+ * /builds/: homemade labware. One section per entry of
  * the `builds` collection, sorted by `order`. The lead picture is the first
  * photo wide enough to show large; the rest go to the Gallery lightbox.
  * Entries with no photos lead with their first YouTube video instead.
@@ -16,8 +16,8 @@ import Gallery from '../components/Gallery.astro';
 import LiteYouTube from '../components/LiteYouTube.astro';
 import VideoClip from '../components/VideoClip.astro';
 import ProjectCard from '../components/ProjectCard.astro';
-import ThemePreview from '../components/gallery/ThemePreview.astro';
 import { breadcrumbJsonLd } from '../components/seo/jsonld';
+import { mdInlineToHtml } from '../lib/format';
 
 const FILES_REPO = 'https://github.com/SemiQuant/homeMadeLabware';
 /** Photos narrower than this are too small to lead a section. */
@@ -36,6 +36,13 @@ const builds = await Promise.all(
     const leadWidths = lead ? [640, 960, 1280].filter((w) => w <= lead.src.width) : [];
     // With no photo, the first YouTube video takes the lead slot.
     const leadVideo = lead ? undefined : d.youtube[0];
+    const morePhotos = d.images.filter((im) => im !== lead);
+    const hasVideos = d.videos.length > 0 || d.youtube.some((v) => v !== leadVideo);
+    // A single extra photo would sit alone in a gallery row, so it joins the video tiles.
+    const soloPhoto = morePhotos.length === 1 && hasVideos ? morePhotos[0] : undefined;
+    const soloFull = soloPhoto
+      ? await getImage({ src: soloPhoto.src, width: Math.min(soloPhoto.src.width, 1800) })
+      : undefined;
     return {
       id: entry.id,
       num: `B-${String(i + 1).padStart(2, '0')}`,
@@ -45,7 +52,9 @@ const builds = await Promise.all(
       leadFull,
       leadWidths,
       leadVideo,
-      morePhotos: d.images.filter((im) => im !== lead),
+      morePhotos: soloPhoto ? [] : morePhotos,
+      soloPhoto,
+      soloFull,
       moreYoutube: d.youtube.filter((v) => v !== leadVideo),
     };
   }),
@@ -55,7 +64,7 @@ const turbo = await getEntry('projects', 'turbolysis');
 const turboPub = turbo?.data.publications[0] ? await getEntry(turbo.data.publications[0]) : undefined;
 
 const description =
-  'Homemade lab equipment by Jason Limberis: a $30 OD600 spectrophotometer, $5 magnetic bead racks, a bead dispenser, a pH meter and more, with open build files.';
+  'Homemade lab equipment by Jason Limberis: a $30 OD600 spectrophotometer, $5 magnetic bead racks, a bead dispenser, a pH meter and more. Most have open build files.';
 ---
 
 <Base
@@ -66,21 +75,19 @@ const description =
     { name: 'Builds', href: '/builds/' },
   ])}
 >
-  <ThemePreview slot="head" />
-
   <PageHeader
     index="04"
     label="Builds"
     title="Homemade labware"
-    lede="Custom labware I built when the off-the-shelf option was too expensive or did not exist. The build files are open."
+    lede="Custom labware I built for the bench. Build files are open where they exist."
   >
     <ButtonLink href={FILES_REPO} variant="ghost" external>Build files on GitHub</ButtonLink>
   </PageHeader>
 
   <div class="wrap">
     <nav class="log-index" aria-labelledby="log-index">
-      <SectionLabel label="Log" id="log-index">
-        <span slot="aside" class="label">{builds.length} builds</span>
+      <SectionLabel label="All builds" id="log-index">
+        <span slot="aside">{builds.length} builds</span>
       </SectionLabel>
       <ol>
         {
@@ -110,7 +117,7 @@ const description =
               )}
             </p>
             <h2 id={`${b.id}-title`}>{b.d.title}</h2>
-            <p class="tagline">{b.d.tagline}</p>
+            <p class="tagline" set:html={mdInlineToHtml(b.d.tagline)} />
             <Prose>
               <b.Content />
             </Prose>
@@ -119,11 +126,13 @@ const description =
                 {b.d.links.files && (
                   <ButtonLink href={b.d.links.files} variant="ghost" external>
                     Build files
+                    <span class="visually-hidden">: {b.d.title}</span>
                   </ButtonLink>
                 )}
                 {b.d.links.repo && (
                   <ButtonLink href={b.d.links.repo} variant="ghost" external>
                     Repo
+                    <span class="visually-hidden">: {b.d.title}</span>
                   </ButtonLink>
                 )}
               </div>
@@ -133,7 +142,11 @@ const description =
           <div class="media">
             {b.lead && b.leadFull && (
               <figure class="lead">
-                <a href={b.leadFull.src} aria-label={`Full-size photo: ${b.d.title}`}>
+                <a
+                  href={b.leadFull.src}
+                  style={b.lead.src.height > b.lead.src.width ? `--ar:${(b.lead.src.width / b.lead.src.height).toFixed(4)}` : undefined}
+                  aria-label={`Full-size photo: ${b.d.title}`}
+                >
                   <Image
                     src={b.lead.src}
                     alt={b.lead.alt}
@@ -151,15 +164,28 @@ const description =
                 </figcaption>
               </figure>
             )}
-            {b.leadVideo && <LiteYouTube id={b.leadVideo.id} title={b.leadVideo.title} />}
+            {b.leadVideo && <LiteYouTube id={b.leadVideo.id} title={b.leadVideo.title} poster={b.leadVideo.poster} />}
             {b.morePhotos.length > 0 && <Gallery images={b.morePhotos} label={`More photos of ${b.d.title}`} />}
             {(b.d.videos.length > 0 || b.moreYoutube.length > 0) && (
               <div class="videos">
+                {b.soloPhoto && b.soloFull && (
+                  <figure class="lead solo">
+                    <a href={b.soloFull.src} aria-label={`Full-size photo: ${b.soloPhoto.alt}`}>
+                      <Image src={b.soloPhoto.src} alt={b.soloPhoto.alt} width={640} height={360} fit="cover" loading="lazy" />
+                    </a>
+                    <figcaption>
+                      <span class="cap-tag" aria-hidden="true">
+                        Photo
+                      </span>
+                      <span>{b.soloPhoto.alt}</span>
+                    </figcaption>
+                  </figure>
+                )}
                 {b.d.videos.map((v) => (
-                  <VideoClip src={v.src} poster={v.poster} title={v.title} />
+                  <VideoClip src={v.src} poster={v.poster} title={v.title} width={v.width} height={v.height} />
                 ))}
                 {b.moreYoutube.map((v) => (
-                  <LiteYouTube id={v.id} title={v.title} />
+                  <LiteYouTube id={v.id} title={v.title} poster={v.poster} />
                 ))}
               </div>
             )}
@@ -295,8 +321,10 @@ const description =
   .lead {
     margin: 0;
   }
+  /* --ar (width / height) is set on portrait photos only: the frame hugs the photo and stops at 30rem tall. */
   .lead a {
     display: block;
+    max-width: calc(30rem * var(--ar, 10));
     background: var(--surface-2);
     border: var(--hair);
     border-radius: var(--radius);
@@ -310,8 +338,6 @@ const description =
     display: block;
     width: 100%;
     height: auto;
-    max-height: 36rem;
-    object-fit: contain;
   }
   .lead figcaption {
     display: flex;
@@ -332,7 +358,8 @@ const description =
   }
   .videos {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    align-items: start;
     gap: var(--s-4);
   }
 

@@ -5,8 +5,10 @@ order: 30
 youtube:
   - id: Qg2Ama6LNJw
     title: Bead dispenser v2
+    poster: ../../assets/builds/yt-Qg2Ama6LNJw.jpg
   - id: kPF8RhN5M6s
     title: Bead dispenser
+    poster: ../../assets/builds/yt-kPF8RhN5M6s.jpg
 links:
   files: https://github.com/SemiQuant/homeMadeLabware/tree/main/bead%20dispensor
   repo: https://github.com/SemiQuant/homeMadeLabware

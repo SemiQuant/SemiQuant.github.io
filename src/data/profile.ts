@@ -33,7 +33,7 @@ export const profile = {
 
 export const nav = [
   { label: 'Research', href: '/research/' },
-  { label: 'Methods & software', href: '/software/' },
+  { label: 'Methods and software', href: '/software/' },
   { label: 'Publications', href: '/publications/' },
   { label: 'Builds', href: '/builds/' },
   { label: 'Side projects', href: '/side-projects/' },

@@ -1,7 +1,7 @@
 ---
 title: SeqCalcs
 kind: webapp
-tagline: Sequencing calculators.
+tagline: Calculators for expected sequencing coverage, PCR optimization and amplicon counts.
 status: Live
 year: 2021
 order: 230

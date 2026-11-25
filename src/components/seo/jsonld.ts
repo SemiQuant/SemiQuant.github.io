@@ -75,7 +75,7 @@ export function websiteJsonLd(): JsonLd {
   };
 }
 
-const NOT_A_NAME = /^(et al\.?|…|\.\.\.)$/i;
+const NOT_A_NAME = /^(et al\.?|…|\.\.\.|contributing author)$/i;
 
 function authorList(authors: readonly string[]): JsonLd[] {
   return authors
@@ -87,7 +87,8 @@ function authorList(authors: readonly string[]): JsonLd[] {
 const PUB_TYPE: Record<CollectionEntry<'publications'>['data']['type'], string> = {
   article: 'ScholarlyArticle',
   preprint: 'ScholarlyArticle',
-  chapter: 'Chapter',
+  // The chapter entry carries the book's title, so it is described as the Book.
+  chapter: 'Book',
   software: 'SoftwareSourceCode',
 };
 
@@ -96,16 +97,22 @@ export function publicationNode(pub: CollectionEntry<'publications'>): JsonLd {
   const d = pub.data;
   const doiUrl = d.doi ? `https://doi.org/${d.doi}` : undefined;
   const pmidUrl = d.pmid ? `https://pubmed.ncbi.nlm.nih.gov/${d.pmid}/` : undefined;
+  const authors = authorList(d.authors);
   const sameAs = [doiUrl, pmidUrl, d.url].filter((u): u is string => Boolean(u));
-  const container = d.type === 'chapter' ? 'Book' : d.type === 'software' ? undefined : 'Periodical';
+  // For a chapter the `journal` field holds the publisher, not the book title,
+  // so it is emitted as publisher. Software has a publisher too. Articles and
+  // preprints sit in a periodical.
+  const inPeriodical = d.type === 'article' || d.type === 'preprint';
   return clean({
     '@type': PUB_TYPE[d.type],
     name: stripMarkers(d.title),
     headline: d.type === 'article' || d.type === 'preprint' ? stripMarkers(d.title) : undefined,
-    author: authorList(d.authors),
+    author: authors,
+    // "Contributing author" is not a person's name: the owner is a contributor.
+    contributor: authors.length === 0 ? personRef() : undefined,
     datePublished: String(d.year),
-    isPartOf: d.journal && container ? { '@type': container, name: d.journal } : undefined,
-    publisher: d.journal && !container ? { '@type': 'Organization', name: d.journal } : undefined,
+    isPartOf: d.journal && inPeriodical ? { '@type': 'Periodical', name: d.journal } : undefined,
+    publisher: d.journal && !inPeriodical ? { '@type': 'Organization', name: d.journal } : undefined,
     identifier: d.doi ? { '@type': 'PropertyValue', propertyID: 'DOI', value: d.doi } : undefined,
     url: sameAs[0],
     sameAs,
@@ -130,9 +137,10 @@ export function publicationsJsonLd(pubs: CollectionEntry<'publications'>[]): Jso
 const APP_KINDS = new Set<CollectionEntry<'projects'>['data']['kind']>(['webapp', 'game']);
 
 /**
- * SoftwareSourceCode for a project with a repo, SoftwareApplication for web
- * apps, games and projects without one. Pass the resolved publication entries
- * to add them as citations.
+ * SoftwareApplication for web apps and games, SoftwareSourceCode for other
+ * projects with a repo, and CreativeWork for the rest (lab methods and
+ * hardware that have neither an app kind nor a repo). Pass the resolved
+ * publication entries to add them as citations.
  */
 export function softwareJsonLd(
   project: CollectionEntry<'projects'>,
@@ -140,22 +148,24 @@ export function softwareJsonLd(
 ): JsonLd {
   const d = project.data;
   const links = d.links;
-  const isApp = APP_KINDS.has(d.kind) || !links.repo;
+  const isApp = APP_KINDS.has(d.kind);
+  const isCode = !isApp && Boolean(links.repo);
+  const type = isApp ? 'SoftwareApplication' : isCode ? 'SoftwareSourceCode' : 'CreativeWork';
   const page = d.detail ? absoluteUrl(`/software/${project.id}/`) : undefined;
-  const url = page ?? links.web ?? links.repo ?? links.appstore ?? links.pypi ?? links.bioconda;
-  const sameAs = [links.repo, links.web, links.pypi, links.bioconda, links.appstore, links.protocol].filter(
+  const url = page ?? links.web ?? links.repo ?? links.appstore ?? links.pypi ?? links.bioconda ?? links.paper;
+  const sameAs = [links.repo, links.web, links.pypi, links.bioconda, links.appstore, links.protocol, links.paper].filter(
     (u): u is string => Boolean(u) && u !== url,
   );
   return clean({
     '@context': CONTEXT,
-    '@type': isApp ? 'SoftwareApplication' : 'SoftwareSourceCode',
+    '@type': type,
     name: d.title,
-    description: d.tagline,
+    description: stripMarkers(d.tagline),
     url,
-    codeRepository: isApp ? undefined : links.repo,
+    codeRepository: isCode ? links.repo : undefined,
     installUrl: isApp ? links.appstore : undefined,
     applicationCategory: isApp ? (d.kind === 'game' ? 'GameApplication' : 'WebApplication') : undefined,
-    author: personRef(),
+    author: d.authors ? authorList(d.authors) : personRef(),
     keywords: d.tags.join(', '),
     sameAs,
     citation: pubs.map(publicationNode),

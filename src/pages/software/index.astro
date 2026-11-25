@@ -51,7 +51,7 @@ const description =
 const jsonLd = [
   breadcrumbJsonLd([
     { name: 'Home', href: '/' },
-    { name: 'Methods & software', href: '/software/' },
+    { name: 'Methods and software', href: '/software/' },
   ]),
   {
     '@context': 'https://schema.org',
@@ -70,7 +70,7 @@ const jsonLd = [
 <Base title={title} description={description} jsonLd={jsonLd}>
   <PageHeader
     index="02"
-    label="Methods & software"
+    label="Methods and software"
     title={title}
     lede="Laboratory methods, one lysis device, and the software that goes with them. The larger projects have their own page here. The rest link straight to the code or the app."
   />
@@ -114,7 +114,7 @@ const jsonLd = [
           <ul class="cards">
             {g.items.map((p) => (
               <li data-card data-kind={p.data.kind}>
-                <ProjectCard project={p} href={p.data.detail ? `/software/${p.id}/` : undefined} />
+                <ProjectCard project={p} href={p.data.detail ? `/software/${p.id}/` : undefined} cover={false} />
               </li>
             ))}
           </ul>
@@ -218,7 +218,6 @@ const jsonLd = [
   }
   .n {
     font-variant-numeric: tabular-nums;
-    opacity: 0.75;
   }
   .group {
     margin-bottom: var(--s-8);

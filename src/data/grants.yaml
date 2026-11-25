@@ -1,7 +1,7 @@
 # Major projects and funding. Generated from the CV by scripts/extract-cv.mjs.
 
 - id: nih-xpertnano
-  title: A novel cartridge-based sequencing solution for decentralized M. tuberculosis resistance detection
+  title: A novel cartridge-based sequencing solution for decentralized *M. tuberculosis* resistance detection
   funder: National Institutes of Health
   start: 2023
   end: 2028
@@ -9,7 +9,7 @@
   summary: Designing, optimizing, and validating novel sequencing strategies to facilitate early, appropriate drug-resistant TB treatment under programmatic conditions, in collaboration with Cepheid.
 
 - id: gates-turbolysis
-  title: "turboLysis: a low-cost, small-footprint device for efficient Mycobacterium tuberculosis cell lysis"
+  title: "turboLysis: a low-cost, small-footprint device for efficient *Mycobacterium tuberculosis* cell lysis"
   funder: Bill & Melinda Gates Foundation, Grand Challenges
   start: 2026
   end: 2027
@@ -22,7 +22,7 @@
   start: 2022
   end: 2027
   role: DNA extraction method development
-  summary: Developing the DNA extraction methods used to isolate M. tuberculosis DNA for targeted and whole-genome sequencing in the clinical trial. Assisting and supporting the laboratory team.
+  summary: The methods isolate *M. tuberculosis* DNA for targeted and whole-genome sequencing in the clinical trial. Also supporting the laboratory team.
 
 - id: pbbr-dual-scrnaseq
   title: Enabling dual single-cell RNA sequencing of host and intracellular pathogens
@@ -54,4 +54,4 @@
   start: 2017
   end: 2020
   role: Project manager
-  summary: Coordinated exchange programmes and courses within the TESA network and assisted in the development of mentoring programmes.
+  summary: Coordinated exchange programs and courses within the TESA network and assisted in the development of mentoring programs.

@@ -1,23 +1,40 @@
 ---
 /**
- * Self-hosted clip with native controls. Nothing downloads until play.
- * Usage: <VideoClip src="/video/turbolysis-run.mp4" poster="/video/turbolysis-run.jpg" title="A lysis run" />
- * src and poster are paths under public/.
+ * Self-hosted clip. Nothing downloads until play.
+ * Usage: <VideoClip src="/video/turbolysis-run.mp4" poster="/video/turbolysis-run.jpg" title="A lysis run" width={608} height={1080} />
+ * src and poster are paths under public/. width and height are the clip's
+ * pixel size: the player takes that shape, and a portrait clip is capped in
+ * width. Without them the player is 16:9.
+ * With JavaScript the poster shows the same play button as LiteYouTube and
+ * the native controls appear on play. Without it the native controls show.
  */
 interface Props {
   src: string;
   poster?: string;
   title: string;
+  width?: number;
+  height?: number;
 }
 
-const { src, poster, title } = Astro.props;
+const { src, poster, title, width = 16, height = 9 } = Astro.props;
 ---
 
-<figure class="clip">
-  <video controls preload="none" playsinline poster={poster} aria-label={title}>
-    <source src={src} />
-    <a href={src}>Download the video: {title}</a>
-  </video>
+<figure class:list={['clip', { portrait: height > width }]}>
+  <div class="frame" data-clip data-title={title}>
+    <video
+      controls
+      preload="none"
+      playsinline
+      poster={poster}
+      aria-label={title}
+      width={width}
+      height={height}
+      style={`aspect-ratio:${width}/${height}`}
+    >
+      <source src={src} />
+      <a href={src}>Download the video: {title}</a>
+    </video>
+  </div>
   <figcaption>
     <span class="tag" aria-hidden="true">Clip</span>
     <span>{title}</span>
@@ -28,12 +45,46 @@ const { src, poster, title } = Astro.props;
   .clip {
     margin: 0;
   }
-  video {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    background: #000;
+  .clip.portrait {
+    max-width: 18rem;
+  }
+  .frame {
+    position: relative;
+    background: var(--surface-2);
     border: var(--hair);
     border-radius: var(--radius);
+    overflow: hidden;
+  }
+  video {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  /* The button is added by the script below, so it is styled globally inside .clip. */
+  .clip :global(.play) {
+    position: absolute;
+    left: var(--s-3);
+    bottom: var(--s-3);
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border: 0;
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+  /* The whole poster is the hit area. */
+  .clip :global(.play::before) {
+    content: '';
+    position: absolute;
+    inset: -100vmax;
+  }
+  .clip :global(.play:focus-visible) {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
   }
   figcaption {
     display: flex;
@@ -53,3 +104,25 @@ const { src, poster, title } = Astro.props;
     color: var(--faint);
   }
 </style>
+
+<script>
+  // Swap the native controls for the site's play button until the clip starts.
+  document.querySelectorAll<HTMLElement>('[data-clip]').forEach((frame) => {
+    const video = frame.querySelector('video');
+    if (!video) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'play';
+    button.setAttribute('aria-label', `Play video: ${frame.dataset.title ?? ''}`);
+    button.innerHTML =
+      '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 2.5v11l9-5.5z" fill="currentColor"></path></svg>';
+    video.controls = false;
+    frame.appendChild(button);
+    button.addEventListener('click', () => {
+      button.remove();
+      video.controls = true;
+      video.play().catch(() => {});
+      video.focus();
+    });
+  });
+</script>

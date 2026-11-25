@@ -6,13 +6,6 @@ import { nav } from '../data/profile';
 ---
 
 <Base title="Page not found" description="There is no page at this address on semiquant.com." noindex>
-  <script is:inline slot="head">
-    (function () {
-      var t = new URLSearchParams(location.search).get('theme');
-      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
-    })();
-  </script>
-
   <div class="wrap nf">
     <p class="label"><span class="idx">Status</span> <span class="sep" aria-hidden="true">/</span> Not found</p>
     <p class="readout mono" aria-hidden="true">404</p>

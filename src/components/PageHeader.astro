@@ -9,8 +9,11 @@ interface Props {
   /** Short channel label shown above the title. */
   label: string;
   title: string;
+  /** Plain text. *Asterisks* mark italics (species and gene names). */
   lede?: string;
 }
+
+import { mdInlineToHtml } from '../lib/format';
 
 const { index, label, title, lede } = Astro.props;
 const idx = index === undefined ? undefined : String(index).padStart(2, '0');
@@ -24,7 +27,7 @@ const idx = index === undefined ? undefined : String(index).padStart(2, '0');
       <span>{label}</span>
     </p>
     <h1>{title}</h1>
-    {lede && <p class="lede">{lede}</p>}
+    {lede && <p class="lede" set:html={mdInlineToHtml(lede)} />}
     {Astro.slots.has('default') && <div class="extra"><slot /></div>}
   </div>
 </header>

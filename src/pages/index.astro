@@ -1,13 +1,13 @@
 ---
 /**
- * Home page: who he is, what he builds, the featured work and papers,
- * current funding and how to reach him. Facts come from the collections
+ * Home page: who he is, what he builds, the featured work and papers and
+ * current funding. The footer carries the contact details. Facts come from the collections
  * and src/data/profile.ts; the prose is distilled from the CV Profile.
  */
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import { profile } from '../data/profile';
-import { formatRange, pubCounts, pubNumbers, sortByDateDesc, sortPubs } from '../lib/format';
+import { formatRange, mdInlineToHtml, pubCounts, pubNumbers, sortByDateDesc, sortPubs } from '../lib/format';
 import { personJsonLd, websiteJsonLd } from '../components/seo/jsonld';
 import ButtonLink from '../components/ButtonLink.astro';
 import SectionLabel from '../components/SectionLabel.astro';
@@ -32,8 +32,7 @@ const stats = [
 const projects = await getCollection('projects');
 const featured = projects
   .filter((p) => p.data.featured)
-  .sort((a, b) => a.data.order - b.data.order || a.id.localeCompare(b.id))
-  .slice(0, 6);
+  .sort((a, b) => a.data.order - b.data.order || a.id.localeCompare(b.id));
 const hasDetail = (id: string) => projects.some((p) => p.id === id && p.data.detail);
 const projectHref = (id: string) => (hasDetail(id) ? `/software/${id}/` : '/software/');
 
@@ -42,23 +41,10 @@ const currentGrants = sortByDateDesc((await getCollection('grants')).filter((g) 
 
 const github = profile.links.find((l) => l.label === 'GitHub');
 const description =
-  'Jason D. Limberis is an infectious disease researcher at UCSF working on tuberculosis diagnostics. He generates and analyzes his own data, and builds the protocols, software and devices a question needs.';
+  'Jason D. Limberis is an infectious disease researcher at UCSF. He develops tuberculosis diagnostics and builds the protocols, software and devices they need.';
 ---
 
 <Base description={description} type="profile" jsonLd={[personJsonLd(), websiteJsonLd()]}>
-  <Fragment slot="head">
-    {
-      import.meta.env.DEV && (
-        <script is:inline>
-          (function () {
-            var t = new URLSearchParams(location.search).get('theme');
-            if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
-          })();
-        </script>
-      )
-    }
-  </Fragment>
-
   <section class="hero">
     <div class="wrap hero-grid">
       <div class="stack hero-copy">
@@ -69,8 +55,8 @@ const description =
           <span class="role-focus">Molecular diagnostics, <em>M. tuberculosis</em> genomics, computational biology</span>
         </p>
         <p class="lede">
-          I generate and analyze the data I work with. I build what a question needs, whether that is a protocol, a
-          software package, or a device, and then I analyze what comes out of it.
+          I generate and analyze my own data, and I build what a question needs: a protocol, a software package, or a
+          device.
         </p>
         <div class="cluster actions">
           <ButtonLink href="/publications/" variant="primary">Publications</ButtonLink>
@@ -94,8 +80,8 @@ const description =
       <div class="about">
         <p class="about-lead">
           I design and run wet lab experiments, optimize techniques when they do not work, and build the computational
-          pipelines needed to interpret the results. That combination is unusual, and it is the reason I can take a
-          question from idea to answer without handing it off halfway.
+          pipelines needed to interpret the results. That lets me take a question from idea to answer without handing it
+          off halfway.
         </p>
         <div class="stack about-body">
           <p>
@@ -130,13 +116,11 @@ const description =
           <p class="label">A protocol</p>
           <h3>Methods</h3>
           <p>
-            <a href={projectHref('spotpcr')}>spotPCR</a> tags individual template molecules with unique molecular identifiers
-            in a single nested PCR, eliminating the ligation, cleanup, and exonuclease digestion steps of conventional UMI
-            workflows.
+            <a href={projectHref('spotpcr')}>spotPCR</a> removes the ligation, cleanup, and exonuclease digestion steps
+            of conventional UMI workflows.
           </p>
           <p>
-            <a href={projectHref('countfu')}>CountFU</a> replaces colony counting with qPCR. Plating costs three hours of
-            hands-on work spread over 3 to 4 days.
+            <a href={projectHref('countfu')}>CountFU</a> skips the month of incubation that plating needs.
           </p>
           <p class="more"><a href="/software/">All methods</a></p>
         </li>
@@ -144,13 +128,9 @@ const description =
           <p class="label">A software package</p>
           <h3>Software</h3>
           <p>
-            <a href={projectHref('primerjinn')}>primerJinn</a> designs multiplex PCR sets and runs <em>in silico</em> PCR
-            against input genomes. <a href={projectHref('uradime')}>URAdime</a> works backwards from sequencing reads and
-            names the primers that generate dimers and super-amplicons.
-          </p>
-          <p>
             I write tools in R and Python for colleagues who do not code, including browser-based versions that need no
-            installation.
+            installation. <a href={projectHref('primerjinn')}>primerJinn</a> and
+            <a href={projectHref('uradime')}>URAdime</a> are two of them.
           </p>
           <p class="more"><a href="/software/">All software</a></p>
         </li>
@@ -158,12 +138,12 @@ const description =
           <p class="label">A device</p>
           <h3>Hardware</h3>
           <p>
-            <a href={projectHref('turbolysis')}>turboLysis</a> lyses <em>M. tuberculosis</em> for $40, against more than
-            $2,000 for commercial bead beaters. It outperformed a commercial bead beater on 200,000 bacilli in buffer.
+            <a href={projectHref('turbolysis')}>turboLysis</a> outperformed a commercial bead beater at
+            <em>M. tuberculosis</em> concentrations above 200,000 CFU/ml.
           </p>
           <p>
-            The current build is fully automated and battery-powered, heats the sample to render it biosafe before lysis,
-            and costs $12.50 to produce.
+            The current build is fully automated and battery-powered, and heats the sample to render it biosafe before
+            lysis.
           </p>
           <p class="more"><a href="/builds/">Lab builds</a></p>
         </li>
@@ -171,8 +151,8 @@ const description =
       <p class="systems">
         <span class="label">Assembled</span>
         <span>
-          These pieces assemble into systems. <a href={projectHref('xpertnano')}>XpertNano</a> moves extraction, amplification,
-          UMI tagging, and nanopore library preparation into a GeneXpert cartridge. GeneXpert runs in 182 countries.
+          <a href={projectHref('xpertnano')}>XpertNano</a> puts the pieces together: extraction, amplification, UMI
+          tagging, and nanopore library preparation in a GeneXpert cartridge. GeneXpert runs in 182 countries.
         </span>
       </p>
     </div>
@@ -183,11 +163,11 @@ const description =
       <SectionLabel label="Featured work">
         <a slot="aside" href="/software/">All methods and software</a>
       </SectionLabel>
-      <ul class="cards">
+      <ul class="cards featured">
         {
           featured.map((p) => (
             <li>
-              <ProjectCard project={p} href={p.data.detail ? `/software/${p.id}/` : undefined} />
+              <ProjectCard project={p} href={p.data.detail ? `/software/${p.id}/` : undefined} cover={false} />
             </li>
           ))
         }
@@ -204,7 +184,7 @@ const description =
     </div>
   </section>
 
-  <section class="section tight">
+  <section class="section tight last">
     <div class="wrap">
       <SectionLabel label="Current funding">
         <a slot="aside" href="/research/">Research</a>
@@ -215,7 +195,7 @@ const description =
             <li class="grant">
               <span class="mono grant-when">{formatRange(g.data.start, g.data.end)}</span>
               <span class="grant-main">
-                <span class="grant-title">{g.data.title}</span>
+                <span class="grant-title" set:html={mdInlineToHtml(g.data.title)} />
                 <span class="grant-meta">
                   {g.data.funder} · {g.data.role}
                 </span>
@@ -227,25 +207,6 @@ const description =
     </div>
   </section>
 
-  <section class="section tight last">
-    <div class="wrap">
-      <SectionLabel label="Contact" />
-      <div class="contact">
-        <a class="mono contact-email" href={`mailto:${profile.email}`}>{profile.email}</a>
-        <ul class="cluster contact-links">
-          {
-            profile.links.map((l) => (
-              <li>
-                <a class="mono" href={l.url} rel={l.me ? 'me noopener' : 'noopener'}>
-                  {l.label}
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-    </div>
-  </section>
 </Base>
 
 <style>
@@ -321,8 +282,7 @@ const description =
     color: var(--muted);
   }
   .about-body a,
-  .more a,
-  .section :global(.aside a) {
+  .more a {
     font-family: var(--font-mono);
     font-size: var(--fs-sm);
   }
@@ -427,28 +387,16 @@ const description =
     }
   }
 
-  /* Contact */
-  .contact {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--s-4) var(--s-6);
+  /* Featured work: eight text-only cards, four to a row on wide screens, two below. */
+  @media (min-width: 640px) {
+    .featured {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
-  .contact-email {
-    font-size: var(--fs-md);
-    overflow-wrap: anywhere;
-  }
-  .contact-links {
-    --gap: var(--s-2) var(--s-5);
-    list-style: none;
-    padding: 0;
-    font-size: var(--fs-sm);
-  }
-  .contact-links a {
-    color: var(--muted);
-  }
-  .contact-links a:hover {
-    color: var(--accent-text);
+  @media (min-width: 1180px) {
+    .featured {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--s-4);
+    }
   }
 </style>

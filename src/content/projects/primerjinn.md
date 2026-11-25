@@ -1,7 +1,7 @@
 ---
 title: primerJinn
 kind: method
-tagline: Designs multiplex PCR primer sets for amplicon sequencing and runs in silico PCR against input genomes.
+tagline: Designs multiplex PCR primer sets for amplicon sequencing and runs *in silico* PCR against input genomes.
 status: Published
 year: 2023
 featured: true
@@ -24,7 +24,7 @@ Multiplex PCR amplifies many targets in one tube, and most targeted sequencing o
 
 ## What it does
 
-primerJinn has two jobs. It designs a multiplex primer set for the target regions of a FASTA sequence, and it runs in silico PCR on a list of primers against one or many input genomes. It checks primer interactions, has settings for NEB Q5 hot start polymerase, and can add Illumina partial adapters.
+primerJinn has two jobs. It designs a multiplex primer set for the target regions of a FASTA sequence, and it runs *in silico* PCR on a list of primers against one or many input genomes. It checks primer interactions, has settings for NEB Q5 hot start polymerase, and can add Illumina partial adapters.
 
 A newer designer, `primerjinn-multiplex`, starts from a genome name and a list of positions. It fetches the genome from NCBI, covers every position, matches primers on binding at the annealing temperature, checks specificity across the genome, splits the amplicons into pools and suggests PCR conditions. After a sequencing run it takes the read counts per amplicon, rebalances primer concentrations and redesigns only the amplicons that failed. A local web app does the same as the command line.
 
@@ -34,4 +34,4 @@ In the paper we used primerJinn to design a multiplex PCR for the drug resistanc
 
 ## Status and where to get it
 
-Published in BMC Bioinformatics (2023) and open source under GPL-3.0. Install it with `pip install primerJinn` or from bioconda. A hosted version runs on [DrDx.Me](https://drdx.ucsf.edu/).
+Published in BMC Bioinformatics (2023) and open source. Install it with `pip install primerJinn` or from bioconda. A hosted version runs on [DrDx.Me](https://drdx.ucsf.edu/).

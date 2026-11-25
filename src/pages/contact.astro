@@ -16,18 +16,11 @@ const shortUrl = (u: string) => u.replace(/^https?:\/\/(www\.)?/, '').replace(/\
   type="profile"
   jsonLd={[personJsonLd(), breadcrumbJsonLd([{ name: 'Home', href: '/' }, { name: 'Contact', href: '/contact/' }])]}
 >
-  <script is:inline slot="head">
-    (function () {
-      var t = new URLSearchParams(location.search).get('theme');
-      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
-    })();
-  </script>
-
   <PageHeader
     index="07"
     label="Contact"
     title="Contact"
-    lede="Write to me about a method that is not working, a collaboration, or any of the tools on this site. Email is the way to reach me."
+    lede="Email me about a method that is not working, a collaboration, or any of the tools on this site."
   >
     <div class="cluster">
       <ButtonLink href={`mailto:${profile.email}`}>Email me</ButtonLink>

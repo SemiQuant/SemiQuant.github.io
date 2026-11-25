@@ -1,7 +1,7 @@
 ---
 title: turboLysis
 kind: hardware
-tagline: "A $40 device that lyses Mycobacterium tuberculosis, against more than $2,000 for commercial bead beaters."
+tagline: "A $40 device that lyses *Mycobacterium tuberculosis*. Commercial bead beaters cost more than $2,000."
 status: In validation
 year: 2024
 featured: true
@@ -35,7 +35,7 @@ We compared turboLysis with a BeadBug 6 across *M. tuberculosis* concentrations 
 
 ## The second build
 
-A Gates Grand Challenges grant funds the current build. It is fully automated and battery powered, heats the sample to render it biosafe before lysis, and costs $12.50 to produce. A new lysis buffer that removes PCR inhibitors was developed alongside it.
+A Gates Grand Challenges grant funds the current build. It is fully automated and battery-powered, heats the sample to render it biosafe before lysis, and costs $12.50 to produce. A new lysis buffer that removes PCR inhibitors was developed alongside it.
 
 ## Status and where to get it
 

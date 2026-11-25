@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /styleguide/
 
 Sitemap: https://semiquant.com/sitemap-index.xml

@@ -273,11 +273,24 @@ async function checkExternal(url) {
   const host = new URL(url).host.replace(/^www\./, '');
   const finalHost = result.finalUrl ? new URL(result.finalUrl).host.replace(/^www\./, '') : host;
   const { status } = result;
+  // PubMed answers scripted requests with 203 and a captcha page, which says nothing about the record.
+  if (status === 203 && hostMatches(finalHost, ['pubmed.ncbi.nlm.nih.gov'])) return { url, verdict: 'blocked', status: '203 (captcha page)' };
   if ((status >= 200 && status <= 399) || status === 202) return { url, verdict: 'ok', status, finalUrl: result.finalUrl };
   const botHost = hostMatches(host, BOT_BLOCKING_HOSTS) || hostMatches(finalHost, BOT_BLOCKING_HOSTS);
   if (BLOCKED_STATUS.has(status) && botHost) return { url, verdict: 'blocked', status };
   if (status === 0 && /timeout/.test(result.error ?? '') && (hostMatches(host, SLOW_WAKE_HOSTS) || hostMatches(finalHost, SLOW_WAKE_HOSTS))) {
     return { url, verdict: 'blocked', status: 'timeout (app waking up)' };
+  }
+  // Some publishers loop through a login redirect when the client keeps no cookies.
+  // Count that as blocked only when the first hop lands on a known bot-blocking host.
+  if (status === 0 && /redirect count exceeded/i.test(String(result.error ?? ''))) {
+    const first = await fetch(url, { redirect: 'manual', headers: { 'User-Agent': USER_AGENT } }).catch(() => null);
+    first?.body?.cancel().catch(() => {});
+    const loc = first?.headers.get('location');
+    const hopHost = loc ? new URL(loc, url).host.replace(/^www\./, '') : host;
+    if (first && first.status >= 300 && first.status < 400 && hostMatches(hopHost, BOT_BLOCKING_HOSTS)) {
+      return { url, verdict: 'blocked', status: 'redirect loop without cookies' };
+    }
   }
   return { url, verdict: 'failed', status: status || result.error };
 }

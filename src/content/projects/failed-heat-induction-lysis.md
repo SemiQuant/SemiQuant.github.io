@@ -1,7 +1,7 @@
 ---
 title: Heat induction lysis
 kind: failed
-tagline: Rapid lysis of M. tuberculosis using a custom-made heat induction system.
+tagline: Rapid lysis of *M. tuberculosis* using a custom-made heat induction system.
 status: Did not work
 order: 410
 tags: [hardware, tb]

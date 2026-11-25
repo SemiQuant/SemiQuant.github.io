@@ -10,4 +10,4 @@ links:
   repo: https://github.com/SemiQuant/homeMadeLabware
 ---
 
-Ghibli racks! The STL files for seven tube racks are in the repo.
+The STL files for seven tube racks are in the repo.

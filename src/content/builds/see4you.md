@@ -16,9 +16,11 @@ videos:
   - src: /video/see4you.mp4
     poster: /video/see4you.jpg
     title: Taking a blank and an OD reading on the see4you mark 1
+    width: 868
+    height: 1080
 links:
   files: https://github.com/SemiQuant/homeMadeLabware/tree/main/see4you3
   repo: https://github.com/SemiQuant/see4you
 ---
 
-A portable OD600 spectrophotometer that costs about $30 in parts (see the BOM). It has a similar dynamic range and comparable readings to the BioRad SmartSpec Plus. The latest version runs on an Arduino Nano with an AS7341 light sensor, a 600 nm LED and a 16x2 LCD, and the repo has the BOM, schematic, firmware and printable parts.
+It has a similar dynamic range and comparable readings to the Bio-Rad SmartSpec Plus. The latest version runs on an Arduino Nano with an AS7341 light sensor, a 600 nm LED and a 16x2 LCD. The repo has the BOM, schematic, firmware and printable parts.

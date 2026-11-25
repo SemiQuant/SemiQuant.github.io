@@ -16,8 +16,8 @@ export function escapeHtml(text: string): string {
 }
 
 /**
- * Escape HTML, then turn *x* into <em>x</em>. Use with set:html for
- * publication titles that mark species and gene names with asterisks.
+ * Escape HTML, then turn *x* into <em>x</em>. Use with set:html for titles,
+ * taglines and CV text that mark species and gene names with asterisks.
  */
 export function mdInlineToHtml(text: string): string {
   return escapeHtml(text).replace(/\*([^*\s](?:[^*]*[^*\s])?)\*/g, '<em>$1</em>');
@@ -95,7 +95,7 @@ const KIND_LABELS: Record<string, string> = {
   tool: 'Tool',
   pipeline: 'Pipeline',
   webapp: 'Web app',
-  hardware: 'Hardware',
+  hardware: 'Device',
   game: 'Game',
   side: 'Side project',
   failed: 'Did not work',

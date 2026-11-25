@@ -154,13 +154,6 @@ const description = `CV of ${profile.name}, ${profile.affiliation.title} at ${pr
   type="profile"
   jsonLd={[personJsonLd(), breadcrumbJsonLd([{ name: 'Home', href: '/' }, { name: 'CV', href: '/cv/' }])]}
 >
-  <script is:inline slot="head">
-    (function () {
-      var t = new URLSearchParams(location.search).get('theme');
-      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
-    })();
-  </script>
-
   <div id="cv">
     <!-- Print only: the name and contact block at the top of the PDF. -->
     <div class="cv-masthead" aria-hidden="true">
@@ -251,7 +244,7 @@ const description = `CV of ${profile.name}, ${profile.affiliation.title} at ${pr
 
         <section class="cv-section" aria-labelledby="training">
           <SectionLabel label={label('training')} id="training">
-            <span slot="aside">{training.length} items</span>
+            <span slot="aside">{training.length} entries</span>
           </SectionLabel>
           <ul class="twoup">
             {
@@ -274,7 +267,7 @@ const description = `CV of ${profile.name}, ${profile.affiliation.title} at ${pr
                   <p class="key">{p.data.year}</p>
                   <div class="main">
                     <p class="t">{p.data.title}</p>
-                    <p class="d">{p.data.tagline}</p>
+                    <p class="d" set:html={mdInlineToHtml(p.data.tagline)} />
                     <p class="u">
                       {projectUrls(p.data.links).map((u) => (
                         <a href={u} rel="noopener">
@@ -298,7 +291,7 @@ const description = `CV of ${profile.name}, ${profile.affiliation.title} at ${pr
                   <p class="key">{p.data.year}</p>
                   <div class="main">
                     <p class="t">{p.data.title}</p>
-                    <p class="d">{p.data.tagline}</p>
+                    <p class="d" set:html={mdInlineToHtml(p.data.tagline)} />
                     <p class="u">
                       {projectUrls(p.data.links).map((u) => (
                         <a href={u} rel="noopener">
@@ -312,7 +305,7 @@ const description = `CV of ${profile.name}, ${profile.affiliation.title} at ${pr
             }
           </ul>
           <p class="more">
-            Methods and flagship tools are on the <a href="/software/">methods and software</a> page.
+            The methods and larger tools are on the <a href="/software/">methods and software</a> page.
           </p>
         </section>
 
@@ -322,12 +315,12 @@ const description = `CV of ${profile.name}, ${profile.affiliation.title} at ${pr
             {
               grants.map((g) => (
                 <li>
-                  <p class="t">{g.data.title}</p>
+                  <p class="t" set:html={mdInlineToHtml(g.data.title)} />
                   <p class="gm">
                     {formatRange(g.data.start, g.data.end)} · {g.data.funder}
                   </p>
                   <p class="d">
-                    <span class="rl">Role:</span> {g.data.role}. {g.data.summary}
+                    <span class="rl">Role:</span> {g.data.role}. <span set:html={mdInlineToHtml(g.data.summary)} />
                   </p>
                 </li>
               ))
@@ -337,7 +330,7 @@ const description = `CV of ${profile.name}, ${profile.affiliation.title} at ${pr
 
         <section class="cv-section" aria-labelledby="publications">
           <SectionLabel label={label('publications')} id="publications">
-            <span slot="aside">{counts.total} items</span>
+            <span slot="aside">{counts.total} entries</span>
           </SectionLabel>
           <StatStrip stats={stats} stamp={`as of ${profile.metrics.asOf}`} label="Publication metrics" />
           <ol class="cv-pubs">
@@ -394,9 +387,9 @@ const description = `CV of ${profile.name}, ${profile.affiliation.title} at ${pr
                     <span class="sub">{p.data.status}</span>
                   </p>
                   <div class="main">
-                    <p class="t">{p.data.title}</p>
+                    <p class="t" set:html={mdInlineToHtml(p.data.title)} />
                     <p class="d">
-                      {p.data.inventors}. {p.data.detail}
+                      {p.data.inventors}. <span set:html={mdInlineToHtml(p.data.detail)} />
                     </p>
                     {p.data.url && (
                       <p class="u">
@@ -420,7 +413,7 @@ const description = `CV of ${profile.name}, ${profile.affiliation.title} at ${pr
                 <li class="row">
                   <p class="key">{p.data.name}</p>
                   <div class="main">
-                    <p class="d strong">{p.data.description}</p>
+                    <p class="d strong" set:html={mdInlineToHtml(p.data.description)} />
                     <p class="d">{p.data.authors}.</p>
                     {p.data.url && (
                       <p class="u">
@@ -442,8 +435,6 @@ const description = `CV of ${profile.name}, ${profile.affiliation.title} at ${pr
             )
           }
         </section>
-
-        <p class="refs-line">References available on request.</p>
       </div>
     </div>
   </div>
@@ -571,16 +562,25 @@ const description = `CV of ${profile.name}, ${profile.affiliation.title} at ${pr
     font-size: var(--fs-xs);
     line-height: 1.7;
   }
-  .u a,
   .more a,
   .footnote a {
     text-decoration: none;
     overflow-wrap: anywhere;
   }
-  .u a:hover,
   .more a:hover,
   .footnote a:hover {
     text-decoration: underline;
+  }
+  /* Repository and app URLs are muted, like DOI and PMID links: orange on every row would outweigh the titles. */
+  .u a {
+    color: var(--muted);
+    text-decoration: underline;
+    text-decoration-color: var(--border-strong);
+    overflow-wrap: anywhere;
+  }
+  .u a:hover,
+  .u a:focus-visible {
+    color: var(--accent-text);
   }
   .more {
     margin-top: var(--s-4);
@@ -656,14 +656,20 @@ const description = `CV of ${profile.name}, ${profile.affiliation.title} at ${pr
   .cv-pubs cite {
     font-style: italic;
   }
+  /* inline-block moves a DOI or PMID to the next line whole; it only breaks inside when wider than the column. */
   .idl {
+    display: inline-block;
+    max-width: 100%;
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
-    text-decoration: none;
+    color: var(--muted);
+    text-decoration: underline;
+    text-decoration-color: var(--border-strong);
     overflow-wrap: anywhere;
   }
-  .idl:hover {
-    text-decoration: underline;
+  .idl:hover,
+  .idl:focus-visible {
+    color: var(--accent-text);
   }
   .tag {
     display: inline-block;
@@ -680,13 +686,6 @@ const description = `CV of ${profile.name}, ${profile.affiliation.title} at ${pr
   .footnote {
     margin-top: var(--s-4);
     font-size: var(--fs-xs);
-    color: var(--muted);
-  }
-  .refs-line {
-    margin-top: var(--s-7);
-    padding-top: var(--s-4);
-    border-top: var(--hair);
-    font-size: var(--fs-sm);
     color: var(--muted);
   }
 </style>

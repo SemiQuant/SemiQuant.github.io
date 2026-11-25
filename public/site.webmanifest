@@ -3,8 +3,8 @@
   "short_name": "SemiQuant",
   "start_url": "/",
   "display": "browser",
-  "theme_color": "#0B0D10",
-  "background_color": "#0B0D10",
+  "theme_color": "#1d1f23",
+  "background_color": "#1d1f23",
   "icons": [
     {
       "src": "/icon-192.png",

@@ -1,7 +1,7 @@
 ---
 title: Mycobacteriophage endolysin lysis
 kind: failed
-tagline: Rapid lysis of M. tuberculosis using mycobacteriophage endolysins.
+tagline: Rapid lysis of *M. tuberculosis* using mycobacteriophage endolysins.
 status: Did not work
 order: 430
 tags: [tb]

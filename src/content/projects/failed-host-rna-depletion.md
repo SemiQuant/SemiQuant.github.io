@@ -1,7 +1,7 @@
 ---
 title: Host RNA depletion with RNase H
 kind: failed
-tagline: Depleting host RNA in M. tuberculosis-infected cells using RNase H and a single-stranded cDNA library made from the same cell type.
+tagline: Depleting host RNA in *M. tuberculosis*-infected cells using RNase H and a single-stranded cDNA library made from the same cell type.
 status: Did not work
 order: 400
 tags: [rna, tb]

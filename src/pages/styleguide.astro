@@ -110,13 +110,6 @@ const typeScale = [
 ---
 
 <Base title="Style guide" description="Components and design tokens for semiquant.com." noindex>
-  <script is:inline slot="head">
-    (function () {
-      var t = new URLSearchParams(location.search).get('theme');
-      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
-    })();
-  </script>
-
   <PageHeader
     index="00"
     label="Style guide"
@@ -147,7 +140,7 @@ const typeScale = [
         <p style="color:var(--text)">Primary text on the page background.</p>
         <p style="color:var(--muted)">Secondary text for authors and captions.</p>
         <p style="color:var(--faint)">Tertiary text for ids and stamps.</p>
-        <p><a href="#color">Link in --accent-text</a></p>
+        <p><a href="#main">Link in --accent-text</a></p>
         <p><span class="on-accent">Dark ink on an accent fill</span></p>
       </div>
     </section>
@@ -187,7 +180,7 @@ const typeScale = [
       <SectionLabel index="03" label="Section labels" />
       <div class="stack" style="--gap:var(--s-5)">
         <SectionLabel index="01" label="Research" />
-        <SectionLabel index="02" label="Methods & software">
+        <SectionLabel index="02" label="Methods and software">
           <a slot="aside" href="/software/">View all</a>
         </SectionLabel>
         <SectionLabel label="Selected publications" as="h3">
@@ -292,10 +285,10 @@ const typeScale = [
         }
         <div class="grid-12">
           <div style="--sm:6">
-            {yt ? <LiteYouTube id={yt.id} title={yt.title} /> : <p class="note">LiteYouTube: no YouTube ids in the builds collection yet.</p>}
+            {yt ? <LiteYouTube id={yt.id} title={yt.title} poster={yt.poster} /> : <p class="note">LiteYouTube: no YouTube ids in the builds collection yet.</p>}
           </div>
           <div style="--sm:6">
-            {clip ? <VideoClip src={clip.src} poster={clip.poster} title={clip.title} /> : <p class="note">VideoClip: no self-hosted clips in the builds collection yet.</p>}
+            {clip ? <VideoClip src={clip.src} poster={clip.poster} title={clip.title} width={clip.width} height={clip.height} /> : <p class="note">VideoClip: no self-hosted clips in the builds collection yet.</p>}
           </div>
         </div>
       </div>
@@ -306,7 +299,7 @@ const typeScale = [
       <Prose>
         <h2>Markdown heading, level two</h2>
         <p>
-          Body copy sits at a 68 character measure. Links look like <a href="#prose">this one</a>, inline code like
+          Body copy sits at a 68 character measure. Links look like <a href="#main">this one</a>, inline code like
           <code>--min-tm 60</code>, and <strong>strong text</strong> is slightly heavier. Species names such as
           <em>Mycobacterium tuberculosis</em> are set in italics.
         </p>
@@ -358,7 +351,7 @@ tool --input reads.fastq.gz \\
           </p>
           <div class="cluster">
             <ButtonLink href="/research/" variant="primary">Research</ButtonLink>
-            <ButtonLink href="/software/" variant="ghost">Methods & software</ButtonLink>
+            <ButtonLink href="/software/" variant="ghost">Methods and software</ButtonLink>
           </div>
         </div>
         <div style="--md:6">

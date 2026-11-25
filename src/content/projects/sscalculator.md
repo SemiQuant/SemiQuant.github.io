@@ -1,7 +1,7 @@
 ---
 title: SScalculator
 kind: webapp
-tagline: Comprehensive sample size and power calculator with range graphs.
+tagline: Sample size and power calculator with range graphs.
 status: Live
 year: 2019
 order: 240

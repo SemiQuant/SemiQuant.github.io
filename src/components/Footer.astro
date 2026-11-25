@@ -15,7 +15,7 @@ const source = 'https://github.com/SemiQuant/SemiQuant.github.io';
   <div class="wrap">
     <div class="cols">
       <div class="col">
-        <h2 class="label">Contact</h2>
+        <p class="label">Contact</p>
         <p><a class="email" href={`mailto:${profile.email}`}>{profile.email}</a></p>
         <p class="where">
           {profile.affiliation.unit}<br />
@@ -24,7 +24,7 @@ const source = 'https://github.com/SemiQuant/SemiQuant.github.io';
       </div>
 
       <div class="col">
-        <h2 class="label">Profiles</h2>
+        <p class="label">Profiles</p>
         <ul class="links two">
           {
             profile.links.map((l) => (
@@ -39,7 +39,7 @@ const source = 'https://github.com/SemiQuant/SemiQuant.github.io';
       </div>
 
       <div class="col">
-        <h2 class="label">Site</h2>
+        <p class="label">Site</p>
         <ul class="links">
           <li><a href={profile.cvPdf}>CV (PDF)</a></li>
           <li><a href="/did-not-work/">Things that did not work</a></li>

@@ -9,6 +9,13 @@
  *   node scripts/extract-cv.mjs --fresh    # ignore what is already in publications.yaml
  *   CV_SRC=/path/to/cv.html node scripts/extract-cv.mjs
  *
+ * CV_SRC is required: the CV source is private and is never committed.
+ *
+ * Two small edits are made to the CV text on the way out (see AMERICANIZE and
+ * ITALIC_TERMS below): prose is put in American spelling, and species names,
+ * gene names and "in silico" are wrapped in *asterisks* so the site can set
+ * them in italics.
+ *
  * Re-running is safe: for publications already in publications.yaml, a doi,
  * pmid or url that the CV does not print is carried over (so enrichment from
  * scripts/enrich-pubs.mjs survives), and entries that are not in the CV list
@@ -27,8 +34,6 @@ import * as cheerio from 'cheerio';
 import YAML from 'yaml';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const DEFAULT_SRC =
-  '/Users/semiquant/Library/Mobile Documents/com~apple~CloudDocs/Work/CV/MyCV/2026/cv.html';
 
 /* ------------------------------------------------------------------ */
 /* Hand-maintained tables                                              */
@@ -130,6 +135,39 @@ const CITATION_FIXES = {
   'limberis-2023-rv0678': ['e0412722', '11(2):e0412722'],
 };
 
+/**
+ * The CV repeats the TSELiOT role as its summary. On the site the role label
+ * is printed next to the summary, so the summary is reworded to avoid saying
+ * it twice. Applied only while the CV still prints the text on the left.
+ */
+const GRANT_SUMMARY_FIXES = {
+  'nih-tseliot': [
+    'Developing the DNA extraction methods used to isolate M. tuberculosis DNA for targeted and whole-genome sequencing in the clinical trial. Assisting and supporting the laboratory team.',
+    'The methods isolate M. tuberculosis DNA for targeted and whole-genome sequencing in the clinical trial. Also supporting the laboratory team.',
+  ],
+};
+
+/**
+ * The site is written in American English. These replacements are applied to
+ * prose only (role bullets, notes, grant summaries, protocol descriptions),
+ * never to titles, organizations or other names, so "Centre for Lung
+ * Infection and Immunity", "Centre for Genomic Regulation" and "Novartis–CRG
+ * mobility programme" stay as printed. Add a row when the CV gains a new
+ * British spelling in prose (scripts/lint-copy.mjs will flag it).
+ */
+const AMERICANIZE = [
+  [/\bcentre(?=[’']s\b)/g, 'center'], // "the centre's TB projects"
+  [/\bprogrammes\b/g, 'programs'], // "exchange programmes", "mentoring programmes"
+];
+
+/**
+ * Terms set in italics on the site. They are wrapped in *asterisks* in
+ * cv.yaml and grants.yaml, and the pages render those fields with
+ * mdInlineToHtml (src/lib/format.ts). Publication titles carry their own
+ * asterisks from the CV markup and do not go through this.
+ */
+const ITALIC_TERMS = /(?<![*\w])(Mycobacterium tuberculosis|M\. tuberculosis|[Rr]v\d{4}c?|in silico)(?![*\w])/g;
+
 const EXPERIENCE_IDS = [
   [/University of California, San Francisco/i, 'ucsf'],
   [/Centre for Lung Infection and Immunity/i, 'uct-lung-institute'],
@@ -155,6 +193,10 @@ const SECTIONS = [
 
 const clean = (s) => String(s ?? '').replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim();
 const stripDot = (s) => s.replace(/\.$/, '');
+const italicize = (s) => s.replace(ITALIC_TERMS, '*$1*');
+const americanize = (s) => AMERICANIZE.reduce((out, [re, to]) => out.replace(re, to), s);
+/** Running text: American spelling plus italics markers. */
+const prose = (s) => italicize(americanize(s));
 export const slug = (s) =>
   s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
     .replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -356,7 +398,9 @@ export function extractGrants($) {
       summary = text;
       if (!role) throw new Error(`No short role label for project "${title}". Add one to GRANT_ROLE_FALLBACK.`);
     }
-    return { id, title, funder: mm[3], start: Number(mm[1]), end: Number(mm[2]), role, summary };
+    const fix = GRANT_SUMMARY_FIXES[id];
+    if (fix && summary === fix[0]) summary = fix[1];
+    return { id, title: italicize(title), funder: mm[3], start: Number(mm[1]), end: Number(mm[2]), role, summary: prose(summary) };
   });
 }
 
@@ -382,7 +426,7 @@ export function extractCv($) {
       place: clean($e.find('span.where').text()),
       ...span($e.find('span.when').text()),
     };
-    const points = $e.find('ul.points > li').toArray().map((li) => clean($(li).text()));
+    const points = $e.find('ul.points > li').toArray().map((li) => prose(clean($(li).text())));
     if (points.length) item.points = points;
     return item;
   });
@@ -396,7 +440,7 @@ export function extractCv($) {
       place: clean($e.find('span.where').text()),
       ...span($e.find('span.when').text()),
     };
-    const note = clean($e.find('p.note').text());
+    const note = prose(clean($e.find('p.note').text()));
     if (note) item.note = note;
     return item;
   });
@@ -433,9 +477,9 @@ export function extractCv($) {
       id: `${slug(title).split('-').slice(-3).join('-')}-${year}`,
       year,
       status: clean($e.find('span.where').text()),
-      title,
+      title: italicize(title),
       inventors,
-      detail: [restFirst.join('. '), ...descs.slice(1)].filter(Boolean).join(' '),
+      detail: italicize([restFirst.join('. '), ...descs.slice(1)].filter(Boolean).join(' ')),
     };
     const href = $e.find('a.url').attr('href');
     if (href) item.url = href;
@@ -445,7 +489,7 @@ export function extractCv($) {
   const protocols = entries($, 'Novel Protocols').map(($e) => {
     const descs = $e.find('p.item-desc').toArray().map((p) => clean($(p).text()));
     const name = clean($e.find('span.when').text());
-    const item = { id: slug(name), name, description: descs[0], authors: stripDot(descs[1] ?? '') };
+    const item = { id: slug(name), name, description: prose(descs[0]), authors: stripDot(descs[1] ?? '') };
     const href = $e.find('a.url').attr('href');
     if (href) item.url = href;
     return item;
@@ -458,7 +502,10 @@ export function extractCv($) {
 /* Load, sanitize, write                                               */
 /* ------------------------------------------------------------------ */
 
-export function loadCv(src = process.env.CV_SRC || DEFAULT_SRC) {
+export function loadCv(src = process.env.CV_SRC) {
+  if (!src) {
+    throw new Error('Set CV_SRC to the path of the private cv.html, for example: CV_SRC=/path/to/cv.html node scripts/extract-cv.mjs');
+  }
   const $ = cheerio.load(readFileSync(src, 'utf8'));
   // Sanitize before anything is read: contact block, profile, references.
   $('header, .masthead, .contact, section.profile, .refs, .ref, script, style').remove();

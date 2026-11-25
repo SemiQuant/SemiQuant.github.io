@@ -16,7 +16,13 @@
     "cv:extract": "node scripts/extract-cv.mjs",
     "pubs:enrich": "node scripts/enrich-pubs.mjs",
     "pubs:add": "node scripts/add-pub.mjs",
-    "cv:pdf": "bash scripts/cv-pdf.sh"
+    "cv:pdf": "bash scripts/cv-pdf.sh",
+    "lint:copy": "node scripts/lint-copy.mjs",
+    "links": "node scripts/check-links.mjs",
+    "links:external": "node scripts/check-links.mjs --external",
+    "icons": "node scripts/make-icons.mjs",
+    "og": "node scripts/make-og.mjs",
+    "verify": "astro check && astro build && node scripts/guard.mjs && node scripts/audit-content.mjs && node scripts/lint-copy.mjs && node scripts/check-links.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.6",

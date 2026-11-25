@@ -2,14 +2,14 @@
 :root {
   color-scheme: dark;
 
-  --bg: #0b0d10;
-  --surface: #111418;
-  --surface-2: #181c22;
-  --text: #e6e8eb;
-  --muted: #9aa3af;
-  --faint: #7d8794;
-  --border: #262b34;
-  --border-strong: #647082;
+  --bg: #1d1f23;
+  --surface: #24272c;
+  --surface-2: #2c3036;
+  --text: #e8e9ec;
+  --muted: #b3b7bf;
+  --faint: #8e98a5;
+  --border: #393e47;
+  --border-strong: #76829a;
 
   /* Orange from the SQ mark. --accent-text is the only orange safe for text. */
   --accent: #f7941d;
@@ -23,7 +23,7 @@
 
   --ok: #5bd39a;
   --warn: #f2c14e;
-  --idle: #7d8794;
+  --idle: #8e98a5;
 
   /* Chart and rule furniture. */
   --grid: rgb(154 163 175 / 0.1);

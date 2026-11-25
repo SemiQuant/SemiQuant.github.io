@@ -9,6 +9,8 @@ videos:
   - src: /video/blue-light.mp4
     poster: /video/blue-light.jpg
     title: The blue light box
+    width: 608
+    height: 1080
 links:
   files: https://github.com/SemiQuant/homeMadeLabware/tree/main/blue%20light
   repo: https://github.com/SemiQuant/homeMadeLabware

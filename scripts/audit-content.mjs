@@ -26,8 +26,7 @@ const opt = (name, fallback) => {
 const ROOT = path.resolve(opt('--root', path.join(path.dirname(fileURLToPath(import.meta.url)), '..')));
 const DIST = path.resolve(opt('--dist', path.join(ROOT, 'dist')));
 const VERBOSE = flag('--verbose');
-const CV_SRC =
-  process.env.CV_SRC ?? '/Users/semiquant/Library/Mobile Documents/com~apple~CloudDocs/Work/CV/MyCV/2026/cv.html';
+const CV_SRC = process.env.CV_SRC ?? '';
 
 const EXPECT = {
   inCv: 36,

@@ -5,6 +5,7 @@ order: 90
 youtube:
   - id: s3drDxQ2vi4
     title: Vacuum manifold
+    poster: ../../assets/builds/yt-s3drDxQ2vi4.jpg
 ---
 
-Built from a $5 aquarium air manifold with an on/off valve for each port. Pieces of 2 ml serological pipette connect the ports to the columns.
+Each port has an on/off valve. Pieces of 2 ml serological pipette connect the ports to the columns.

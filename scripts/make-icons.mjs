@@ -8,7 +8,7 @@ import sharp from 'sharp';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const src = join(root, 'src/assets/brand/sq-512.png');
 const out = join(root, 'public');
-const BG = '#0B0D10';
+const BG = '#1d1f23';
 const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
 
 /** The mark scaled to `size`, on a transparent canvas. */

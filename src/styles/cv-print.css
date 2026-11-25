@@ -157,7 +157,9 @@
   #cv .section-label .aside {
     font-family: var(--font-sans);
     font-size: 7.6pt;
+    font-weight: 400;
     letter-spacing: 0.04em;
+    text-transform: none;
     color: var(--faint);
   }
 
@@ -432,13 +434,5 @@
     margin: 6pt 0 0;
     font-size: 7.6pt;
     color: var(--faint);
-  }
-
-  #cv .refs-line {
-    margin-top: 14pt;
-    padding-top: 6pt;
-    border-top: 0.7pt solid var(--border-strong);
-    font-size: 8.5pt;
-    color: var(--muted);
   }
 }

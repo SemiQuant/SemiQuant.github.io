@@ -26,9 +26,13 @@ interface Props {
   numbers?: Map<string, number>;
   /** Show the "* joint first author" legend when any row needs it. Default true. */
   legend?: boolean;
+  /** Show the "N entries" count above a list without filters. Default true. */
+  showCount?: boolean;
 }
 
-const { pubs, filterable = false, showIds = true, numbers, legend = true } = Astro.props;
+const { pubs, filterable = false, showIds = true, numbers, legend = true, showCount = true } = Astro.props;
+const withCount = filterable || showCount;
+const withLegend = legend;
 const sorted = sortPubs(pubs);
 const total = sorted.length;
 // Extras (inCv false) are missing from the map and render without an id.
@@ -91,18 +95,20 @@ const hasJoint = sorted.some((p) => p.data.role === 'joint-first' || p.data.auth
   }
 
   {
-    total > 0 && (
-      <p class="status-line">
-        <span data-pub-count aria-live={filterable ? 'polite' : undefined}>
-          {filterable ? `Showing ${total} of ${total}` : `${total} ${total === 1 ? 'entry' : 'entries'}`}
-        </span>
-        {legend && hasJoint && <span class="legend">* joint first author</span>}
+    total > 0 && (withCount || (withLegend && hasJoint)) && (
+      <p class:list={['status-line', { 'legend-only': !withCount }]}>
+        {withCount && (
+          <span data-pub-count aria-live={filterable ? 'polite' : undefined}>
+            {filterable ? `Showing ${total} of ${total}` : `${total} ${total === 1 ? 'entry' : 'entries'}`}
+          </span>
+        )}
+        {withLegend && hasJoint && <span class="legend">* joint first author</span>}
       </p>
     )
   }
 
   <ol class="rows" reversed={showIds ? true : undefined}>
-    {sorted.map((pub, i) => <PubRow pub={pub} n={numberOf(pub.id)} showId={showIds} />)}
+    {sorted.map((pub) => <PubRow pub={pub} n={numberOf(pub.id)} showId={showIds} />)}
   </ol>
 
   {total === 0 && <p class="empty">No publications to show yet.</p>}
@@ -248,7 +254,6 @@ const hasJoint = sorted.some((p) => p.data.role === 'joint-first' || p.data.auth
     justify-content: space-between;
     gap: var(--s-1) var(--s-4);
     padding-block: var(--s-2);
-    border-bottom: 1px solid var(--border-strong);
     font-family: var(--font-mono);
     font-size: var(--fs-2xs);
     letter-spacing: var(--track-caps);
@@ -256,10 +261,14 @@ const hasJoint = sorted.some((p) => p.data.role === 'joint-first' || p.data.auth
     font-variant-numeric: tabular-nums;
     color: var(--muted);
   }
+  .status-line.legend-only {
+    justify-content: flex-end;
+  }
   .legend {
     color: var(--faint);
   }
   .rows {
+    border-top: 1px solid var(--border-strong);
     margin: 0;
     padding: 0;
     list-style: none;

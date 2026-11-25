@@ -18,7 +18,7 @@ import Prose from '../../components/Prose.astro';
 import PubList from '../../components/PubList.astro';
 import { breadcrumbJsonLd, softwareJsonLd } from '../../components/seo/jsonld';
 import { reservedPaths } from '../../data/profile';
-import { formatRange, kindLabel, pubNumbers, statusState } from '../../lib/format';
+import { formatRange, kindLabel, mdInlineToHtml, mdInlineToText, pubNumbers, statusState } from '../../lib/format';
 
 export const getStaticPaths = (async () => {
   const detail = (await getCollection('projects', (p) => p.data.detail)).sort(
@@ -57,21 +57,20 @@ const jsonLd = [
   softwareJsonLd(project, pubs),
   breadcrumbJsonLd([
     { name: 'Home', href: '/' },
-    { name: 'Methods & software', href: '/software/' },
+    { name: 'Methods and software', href: '/software/' },
     { name: d.title, href: path },
   ]),
 ];
 ---
 
-<Base title={d.title} description={d.tagline} jsonLd={jsonLd}>
+<Base title={d.title} description={mdInlineToText(d.tagline)} jsonLd={jsonLd}>
   <nav class="crumbs wrap" aria-label="Breadcrumb">
     <ol>
-      <li><a href="/software/"><span aria-hidden="true">&larr;</span> Methods &amp; software</a></li>
-      <li aria-current="page">{d.title}</li>
+      <li><a href="/software/"><span aria-hidden="true">&larr;</span> Methods and software</a></li>
     </ol>
   </nav>
 
-  <PageHeader index="02" label={`Methods & software / ${kindLabel(d.kind)}`} title={d.title} lede={d.tagline} />
+  <PageHeader label={kindLabel(d.kind)} title={d.title} lede={d.tagline} />
 
   <div class="wrap">
     <div class="layout">
@@ -118,7 +117,7 @@ const jsonLd = [
           Object.values(d.links).some(Boolean) && (
             <div class="panel-block">
               <p class="panel-label">Links</p>
-              <ExternalLinks links={d.links} label={`${d.title} links`} />
+              <ExternalLinks links={d.links} label={`${d.title} links`} name={d.title} />
             </div>
           )
         }
@@ -149,6 +148,7 @@ const jsonLd = [
                 widths={[480, 800, d.cover.width]}
                 sizes="(min-width: 960px) 44rem, calc(100vw - 2rem)"
                 loading="eager"
+                fetchpriority="high"
               />
             </figure>
           )
@@ -165,7 +165,7 @@ const jsonLd = [
               All publications
             </a>
           </SectionLabel>
-          <PubList pubs={pubs} numbers={pubNumbers(allPubs)} />
+          <PubList pubs={pubs} numbers={pubNumbers(allPubs)} showCount={false} />
         </section>
       )
     }
@@ -184,8 +184,8 @@ const jsonLd = [
               <span class="num">{formatRange(grant.data.start, grant.data.end)}</span>
               <span>{grant.data.role}</span>
             </p>
-            <h3>{grant.data.title}</h3>
-            <p class="grant-summary">{grant.data.summary}</p>
+            <h3 set:html={mdInlineToHtml(grant.data.title)} />
+            <p class="grant-summary" set:html={mdInlineToHtml(grant.data.summary)} />
           </div>
         </section>
       )
@@ -203,7 +203,7 @@ const jsonLd = [
         ) : (
           <a class="prev" href="/software/">
             <span class="dir">
-              <span aria-hidden="true">&larr;</span> Back to
+              <span aria-hidden="true">&uarr;</span> Index
             </span>
             <span class="name">All methods and software</span>
           </a>
@@ -220,7 +220,7 @@ const jsonLd = [
         ) : (
           <a class="next" href="/software/">
             <span class="dir">
-              Back to <span aria-hidden="true">&rarr;</span>
+              Index <span aria-hidden="true">&uarr;</span>
             </span>
             <span class="name">All methods and software</span>
           </a>
@@ -353,6 +353,25 @@ const jsonLd = [
   .panel-label {
     margin-bottom: var(--s-2);
   }
+  /* Below the two-column layout the panel sits above the prose, so keep it short. */
+  @media (max-width: 959.98px) {
+    .facts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--s-2) var(--s-5);
+    }
+    .facts div {
+      display: flex;
+      gap: var(--s-2);
+    }
+    .readout {
+      grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+      gap: var(--s-3) var(--s-4);
+    }
+    .panel > * {
+      padding: var(--s-3) var(--s-4);
+    }
+  }
   .tags {
     margin: 0;
     padding: 0;
@@ -362,19 +381,22 @@ const jsonLd = [
     display: flex;
   }
 
+  /* The frame hugs the image, so square figures get no side bars. */
   .cover {
     margin: 0 0 var(--s-6);
-    max-width: var(--measure);
+    width: fit-content;
+    max-width: min(100%, var(--measure));
     background: var(--surface-2);
     border: var(--hair);
     border-radius: var(--radius);
+    overflow: hidden;
   }
   .cover :global(img) {
     display: block;
-    width: 100%;
+    width: auto;
+    max-width: 100%;
     height: auto;
     max-height: 30rem;
-    object-fit: contain;
   }
 
   .block {

@@ -14,7 +14,7 @@
  */
 import type { CollectionEntry } from 'astro:content';
 import { Image } from 'astro:assets';
-import { kindLabel, statusState } from '../lib/format';
+import { kindLabel, mdInlineToHtml, statusState } from '../lib/format';
 import StatusDot from './StatusDot.astro';
 import ExternalLinks from './ExternalLinks.astro';
 
@@ -52,7 +52,7 @@ const hasLinks = Object.values(d.links ?? {}).some(Boolean);
     <Tag class="title">
       {href ? <a href={href}>{d.title}</a> : d.title}
     </Tag>
-    <p class="tagline">{d.tagline}</p>
+    <p class="tagline" set:html={mdInlineToHtml(d.tagline)} />
     {
       d.kind === 'failed' && d.lesson && (
         <p class="lesson">
@@ -75,7 +75,7 @@ const hasLinks = Object.values(d.links ?? {}).some(Boolean);
     {
       hasLinks && (
         <div class="links">
-          <ExternalLinks links={d.links} label={`${d.title} links`} />
+          <ExternalLinks links={d.links} label={`${d.title} links`} name={d.title} />
         </div>
       )
     }
@@ -126,7 +126,7 @@ const hasLinks = Object.values(d.links ?? {}).some(Boolean);
     text-transform: uppercase;
   }
   .kind {
-    color: var(--accent-text);
+    color: var(--muted);
   }
   .year {
     color: var(--faint);
@@ -184,6 +184,7 @@ const hasLinks = Object.values(d.links ?? {}).some(Boolean);
   .stats {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
     gap: var(--s-3);
     margin: 0;
     padding-top: var(--s-3);

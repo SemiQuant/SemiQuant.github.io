@@ -4,12 +4,14 @@ on:
   pull_request:
   push:
     branches-ignore: [main]
+  # Called by deploy.yml, so nothing is published without these checks.
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -41,10 +43,10 @@ jobs:
 
       # The private CV is not in the repo, so the CV comparison is skipped here.
       - name: Content audit
-        run: node scripts/audit-content.mjs
+        run: npm run audit
 
       - name: Copy lint
-        run: node scripts/lint-copy.mjs
+        run: npm run lint:copy
 
       - name: Internal links
-        run: node scripts/check-links.mjs
+        run: npm run links

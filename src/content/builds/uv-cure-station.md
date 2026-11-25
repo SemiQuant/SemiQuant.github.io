@@ -11,13 +11,16 @@ images:
 youtube:
   - id: kc1-Ptzx3uE
     title: cryoJason UV cure station
+    poster: ../../assets/builds/yt-kc1-Ptzx3uE.jpg
 videos:
   - src: /video/uv-cure-station.mp4
     poster: /video/uv-cure-station.jpg
     title: Setting the timer on the UV cure station
+    width: 608
+    height: 1080
 links:
   files: https://github.com/SemiQuant/homeMadeLabware/tree/main/cryoJason
   repo: https://github.com/SemiQuant/homeMadeLabware
 ---
 
-A UV cure station for use with the cryostat, about $100 to build. It uses LEDs, a relay timer and a rechargeable battery with a charge indicator, in a 3D-printed case with a sample tray. The parts list in the repo is honest about it: don't build this one, just buy one.
+It uses LEDs, a relay timer and a rechargeable battery with a charge indicator, in a 3D-printed case with a sample tray. The parts list in the repo is honest about it: don't build this one, just buy one.

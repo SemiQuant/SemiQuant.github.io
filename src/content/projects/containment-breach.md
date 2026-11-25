@@ -1,7 +1,7 @@
 ---
 title: Containment Breach
 kind: game
-tagline: A small run and gun browser game about a scientist ninja and a stolen vial.
+tagline: A small run-and-gun browser game about a scientist ninja and a stolen vial.
 status: Live
 year: 2026
 order: 310

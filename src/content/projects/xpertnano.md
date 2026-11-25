@@ -15,8 +15,8 @@ stats:
   - label: Hands-on time (target)
     value: 15 min
   - label: Depth (target)
-    value: 1000x or more
-  - label: Accuracy against whole-genome sequencing (target)
+    value: 1,000x or more
+  - label: Accuracy vs WGS (target)
     value: 99% or more
 tags: [sequencing, nanopore, umi, tb]
 ---
@@ -31,7 +31,7 @@ XpertNano moves extraction, amplification, UMI tagging and nanopore library prep
 
 ## Targets
 
-The project aims for 15 minutes of hands-on time, at least 1000x depth and at least 99% accuracy relative to whole-genome sequencing, with a pilot across South Africa.
+The project aims for 15 minutes of hands-on time, at least 1,000x depth and at least 99% accuracy relative to whole-genome sequencing, with a pilot across South Africa.
 
 ## What we have shown so far
 

@@ -52,15 +52,7 @@ const description =
   `${counts.total} publications by ${profile.name} on tuberculosis diagnostics, drug resistance and genomics, ` +
   `${counts.firstOrJoint} as first or joint first author, with DOI and PubMed links.`;
 
-// The textbook chapter lists "Contributing author" in place of names. That is
-// fine on the page, but it is not a person, so drop it from the structured data.
-type ListItem = { item?: { author?: { name?: string }[] } };
 const pubsLd = publicationsJsonLd(cvPubs);
-for (const el of (pubsLd.itemListElement ?? []) as ListItem[]) {
-  if (!el.item?.author) continue;
-  el.item.author = el.item.author.filter((a) => a.name !== 'Contributing author');
-  if (el.item.author.length === 0) delete el.item.author;
-}
 
 const jsonLd = [
   pubsLd,
@@ -76,7 +68,7 @@ const jsonLd = [
     index="03"
     label="Publications"
     title="Publications"
-    lede="Every publication listed in my CV, newest first, with DOI and PubMed links. Filter by authorship, type or year, or search titles, authors and journals."
+    lede={`The ${counts.total} publications listed in my CV, newest first, with DOI and PubMed links${extras.length > 0 ? ', followed by preprints that are not in it' : ''}. Filter by authorship, type or year, or search titles, authors and journals.`}
   >
     <StatStrip stats={stats} stamp={`as of ${profile.metrics.asOf}`} label="Publication figures" />
     <div class="records">
@@ -90,12 +82,10 @@ const jsonLd = [
 
   <div class="wrap">
     <section class="block" aria-labelledby="pub-list">
-      <SectionLabel label="Publication list" id="pub-list">
-        <span slot="aside">{counts.total} entries</span>
-      </SectionLabel>
+      <SectionLabel label="Publication list" id="pub-list" />
       <PubList pubs={cvPubs} filterable />
       <p class="note">
-        An asterisk marks joint first authors. My name is in bold. Ids count up from the oldest entry
+        An asterisk marks joint first authors. My name is in bold. IDs count up from the oldest entry
         (P-001) to the newest.
       </p>
     </section>
@@ -109,7 +99,7 @@ const jsonLd = [
           <p class="note lead">
             These are not part of the {counts.total} above and are not counted in the figures at the top of the page.
           </p>
-          <PubList pubs={extras} showIds={false} />
+          <PubList pubs={extras} showCount={false} />
         </section>
       )
     }
@@ -132,7 +122,7 @@ const jsonLd = [
                   {p.url && (
                     <p class="ext">
                       <a href={p.url} rel="noopener">
-                        <span class="k">Link</span> {new URL(p.url).hostname.replace(/^www\./, '')}
+                        <span class="k">Link</span> {/patents\.google\.com$/.test(new URL(p.url).hostname) ? 'Google Patents' : new URL(p.url).hostname.replace(/^www\./, '')}
                       </a>
                     </p>
                   )}

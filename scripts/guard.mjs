@@ -39,7 +39,7 @@ const REVEAL = flag('--reveal');
 const OWNER_EMAIL = 'jasonlimberis@gmail.com';
 const REFEREE_DOMAINS = ['ucsf.edu', 'cepheid.com', 'sun.ac.za', 'uct.ac.za'];
 // Built by concatenation so this file never contains the phrases it hunts for.
-const BANNED_PHRASES = ['Claude' + ' Code', 'bring to' + ' this team'];
+const BANNED_PHRASES = ['Claude' + ' Code', 'bring to' + ' this team', 'References available' + ' on request'];
 // Top-level dist entries that may keep their capitals.
 const UPPERCASE_OK = new Set(['CNAME', 'README.md', 'LICENSE', 'LICENSE.txt']);
 // Number-shaped strings that are known not to be phone numbers. Add exact matches here.

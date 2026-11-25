@@ -19,10 +19,10 @@ experience:
     start: 07/2017
     end: 09/2019
     points:
-      - Led the bioinformatics group, building the genomic and transcriptomic pipelines used across the centre’s TB projects.
+      - Led the bioinformatics group, building the genomic and transcriptomic pipelines used across the center’s TB projects.
       - Co-authored the analysis of cough aerosol culture positivity in drug-resistant versus drug-susceptible TB (Nature Medicine, 2020), establishing bacterial and host determinants of patient infectiousness.
-      - Developed methods to recover and analyze the M. tuberculosis transcriptome directly from complex clinical samples.
-      - Coordinated exchange programmes, courses, and mentoring across the EDCTP-funded TESA network of African TB research sites.
+      - Developed methods to recover and analyze the *M. tuberculosis* transcriptome directly from complex clinical samples.
+      - Coordinated exchange programs, courses, and mentoring across the EDCTP-funded TESA network of African TB research sites.
   - id: crg
     role: Internship
     org: Novartis–CRG mobility programme, Centre for Genomic Regulation
@@ -151,11 +151,11 @@ patents:
 protocols:
   - id: easydb
     name: easyDB
-    description: Circularization of rv0678 for genotypic bedaquiline resistance testing of Mycobacterium tuberculosis.
+    description: Circularization of *rv0678* for genotypic bedaquiline resistance testing of *Mycobacterium tuberculosis*.
     authors: Limberis JD, Nalyvayko A, Ernst JD, Metcalfe JZ
   - id: udumbell
     name: uDumBell
-    description: Circularization of rv0678 for genotypic bedaquiline resistance testing of Mycobacterium tuberculosis.
+    description: Circularization of *rv0678* for genotypic bedaquiline resistance testing of *Mycobacterium tuberculosis*.
     authors: Limberis JD, Nalyvayko A, Ernst JD, Metcalfe JZ
   - id: selseq
     name: selSeq

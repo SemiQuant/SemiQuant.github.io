@@ -9,9 +9,11 @@ interface Props {
   links: Partial<Record<'repo' | 'web' | 'pypi' | 'bioconda' | 'paper' | 'protocol' | 'video' | 'appstore', string>>;
   /** Accessible name for the list. */
   label?: string;
+  /** Project name, added as hidden text so each link has a distinct accessible name. */
+  name?: string;
 }
 
-const { links, label = 'Links' } = Astro.props;
+const { links, label = 'Links', name } = Astro.props;
 
 const ORDER = [
   ['web', 'Web app'],
@@ -34,6 +36,7 @@ const items = ORDER.flatMap(([key, text]) => (links?.[key] ? [{ key, text, url: 
         <li>
           <a href={l.url} rel="noopener">
             {l.text}
+            {name && <span class="visually-hidden">: {name}</span>}
             <span class="arrow" aria-hidden="true">
               <svg viewBox="0 0 10 10" width="9" height="9" focusable="false"><path d="M2.5 7.5l5-5M3.5 2.5h4v4" fill="none" stroke="currentColor" stroke-width="1.25"></path></svg>
             </span>

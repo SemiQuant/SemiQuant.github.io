@@ -11,9 +11,10 @@ images:
 youtube:
   - id: nU5Ah2BjL9Q
     title: Magnetic bead rack in use
+    poster: ../../assets/builds/yt-nU5Ah2BjL9Q.jpg
 links:
   files: https://github.com/SemiQuant/homeMadeLabware/tree/main/magentic%20racks
   repo: https://github.com/SemiQuant/homeMadeLabware
 ---
 
-About $5 each, for 8-strip tubes and 1.5 ml tubes. The repo has STL files for 8-well and 12-well racks and the side pieces, plus a link to the magnets.
+The repo has STL files for 8-well and 12-well racks and the side pieces, plus a link to the magnets.

@@ -8,6 +8,7 @@ order: 140
 links:
   repo: https://github.com/SemiQuant/pipeline-umi-amplicon
 publications: [rudd-2020-pipeline-umi-amplicon]
+authors: [Rudd S, Limberis JD, Rescheneder P]
 tags: [umi, nanopore, sequencing]
 ---
 

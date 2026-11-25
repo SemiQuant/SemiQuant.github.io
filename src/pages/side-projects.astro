@@ -12,9 +12,8 @@ import SectionLabel from '../components/SectionLabel.astro';
 import ButtonLink from '../components/ButtonLink.astro';
 import Prose from '../components/Prose.astro';
 import StatusDot from '../components/StatusDot.astro';
-import ThemePreview from '../components/gallery/ThemePreview.astro';
 import { breadcrumbJsonLd } from '../components/seo/jsonld';
-import { statusState } from '../lib/format';
+import { mdInlineToHtml, statusState } from '../lib/format';
 
 const all = (await getCollection('projects', (p) => p.data.kind === 'game' || p.data.kind === 'side')).sort(
   (a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title),
@@ -53,8 +52,6 @@ const description =
     { name: 'Side projects', href: '/side-projects/' },
   ])}
 >
-  <ThemePreview slot="head" />
-
   <PageHeader index="05" label="Side projects" title="Side projects" lede="Things I made outside the lab." />
 
   <div class="wrap">
@@ -62,8 +59,8 @@ const description =
       groups.map((g) => (
         <section class="group" aria-labelledby={g.id}>
           <SectionLabel label={g.label} id={g.id}>
-            <span slot="aside" class="label">
-              {g.items.length}
+            <span slot="aside">
+              {g.items.length} {g.id === 'games' ? (g.items.length === 1 ? 'game' : 'games') : g.items.length === 1 ? 'tool' : 'tools'}
             </span>
           </SectionLabel>
           {g.items.map((r) => (
@@ -86,7 +83,7 @@ const description =
                   {r.d.status && <StatusDot state={statusState(r.d.status)} label={r.d.status} />}
                 </p>
                 <h3 id={`${r.id}-title`}>{r.d.title}</h3>
-                <p class="tagline">{r.d.tagline}</p>
+                <p class="tagline" set:html={mdInlineToHtml(r.d.tagline)} />
               </div>
               <div class="detail">
                 <Prose>
@@ -107,6 +104,7 @@ const description =
                     {r.links.map((l) => (
                       <ButtonLink href={l.url} variant={l.primary ? 'primary' : 'ghost'} external>
                         {l.text}
+                        <span class="visually-hidden">: {r.d.title}</span>
                       </ButtonLink>
                     ))}
                   </div>
@@ -221,12 +219,18 @@ const description =
 
   @media (min-width: 960px) {
     .row {
-      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-      column-gap: var(--s-7);
       row-gap: var(--s-5);
       padding-block: var(--s-7);
     }
-    /* With a cover: picture on the right, heading and detail stacked on the left. */
+    /* Every row reads heading, body, buttons in one left column. */
+    .row:not(.has-cover) > * {
+      max-width: var(--measure);
+    }
+    /* With a cover: picture on the right. */
+    .row.has-cover {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      column-gap: var(--s-7);
+    }
     .row.has-cover .cover {
       grid-column: 2;
       grid-row: 1 / span 2;

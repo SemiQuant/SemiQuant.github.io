@@ -34,7 +34,7 @@ const isActive = (href: string) => path === href || path.startsWith(href);
         {
           nav.map((item) => (
             <li>
-              <a href={item.href} aria-current={isActive(item.href) ? 'page' : undefined}>
+              <a href={item.href} aria-current={path === item.href ? 'page' : isActive(item.href) ? 'true' : undefined}>
                 {item.label}
               </a>
             </li>
@@ -103,10 +103,10 @@ const isActive = (href: string) => path === href || path.startsWith(href);
   .site-nav a:hover {
     color: var(--text);
   }
-  .site-nav a[aria-current='page'] {
+  .site-nav a[aria-current] {
     color: var(--text);
   }
-  .site-nav a[aria-current='page']::after {
+  .site-nav a[aria-current]::after {
     content: '';
     position: absolute;
     inset: auto 0 -1px 0;
@@ -160,7 +160,7 @@ const isActive = (href: string) => path === href || path.startsWith(href);
     .site-nav a {
       min-height: 2.75rem;
     }
-    .site-nav a[aria-current='page']::after {
+    .site-nav a[aria-current]::after {
       inset: auto 0 0.5rem 0;
       height: 1px;
     }
@@ -185,10 +185,10 @@ const isActive = (href: string) => path === href || path.startsWith(href);
       min-height: 2.75rem;
       font-size: var(--fs-base);
     }
-    :global(.js) .site-nav a[aria-current='page'] {
+    :global(.js) .site-nav a[aria-current] {
       color: var(--accent-text);
     }
-    :global(.js) .site-nav a[aria-current='page']::after {
+    :global(.js) .site-nav a[aria-current]::after {
       display: none;
     }
   }

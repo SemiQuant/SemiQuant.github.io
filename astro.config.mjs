@@ -7,7 +7,8 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   site: 'https://semiquant.com',
   trailingSlash: 'always',
-  integrations: [sitemap()],
+  // The style guide is a dev aid (noindex), so it stays out of the sitemap.
+  integrations: [sitemap({ filter: (page) => new URL(page).pathname !== '/styleguide/' })],
   // Keep whitespace between inline elements (author lists, citations).
   compressHTML: false,
 });

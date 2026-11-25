@@ -112,6 +112,12 @@ const searchText = [mdInlineToText(d.title), d.authors.join(' '), d.journal ?? '
     color: var(--faint);
     white-space: nowrap;
   }
+  /* Rows without a number (extras) keep the column on wide screens so titles align. */
+  @media (max-width: 639.98px) {
+    .id:empty {
+      display: none;
+    }
+  }
   @media (min-width: 640px) {
     .pub.with-id {
       grid-template-columns: 4.25rem minmax(0, 1fr);

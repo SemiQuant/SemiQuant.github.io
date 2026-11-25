@@ -58,7 +58,7 @@ const html = `<!doctype html>
 @font-face { font-family: Inter; src: url("${inter}") format("woff2"); font-weight: 100 900; }
 @font-face { font-family: Mono; src: url("${mono}") format("woff2"); font-weight: 100 800; }
 * { box-sizing: border-box; margin: 0; }
-html, body { width: ${W}px; height: ${H}px; background: #0B0D10; overflow: hidden; }
+html, body { width: ${W}px; height: ${H}px; background: #1d1f23; overflow: hidden; }
 body { position: relative; color: #E6E8EB; font-family: Inter, sans-serif; -webkit-font-smoothing: antialiased; }
 svg { position: absolute; inset: 0; }
 .brand { position: absolute; left: 72px; top: 64px; display: flex; align-items: center; gap: 22px; }

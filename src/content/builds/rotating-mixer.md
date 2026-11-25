@@ -9,6 +9,8 @@ videos:
   - src: /video/rotating-mixer.mp4
     poster: /video/rotating-mixer.jpg
     title: The rotating mixer turning tubes end over end
+    width: 608
+    height: 1080
 links:
   files: https://github.com/SemiQuant/homeMadeLabware/tree/main/rotating%20mixer
   repo: https://github.com/SemiQuant/homeMadeLabware

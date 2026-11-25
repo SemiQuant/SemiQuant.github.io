@@ -8,7 +8,11 @@
  *   ]} />
  * when: date text (mono). meta: organization or place. body: one paragraph.
  * points: optional bullet list. current: accent marker and a "Now" tag.
+ * title, body and points are plain text; *asterisks* mark italics (species
+ * and gene names) and everything else is HTML-escaped.
  */
+import { mdInlineToHtml } from '../lib/format';
+
 interface Props {
   items: { when: string; title: string; meta?: string; body?: string; points?: readonly string[]; current?: boolean }[];
 }
@@ -26,13 +30,13 @@ const { items } = Astro.props;
             {it.current && <span class="now">Now</span>}
           </p>
           <div class="content">
-            <p class="title">{it.title}</p>
+            <p class="title" set:html={mdInlineToHtml(it.title)} />
             {it.meta && <p class="meta">{it.meta}</p>}
-            {it.body && <p class="body">{it.body}</p>}
+            {it.body && <p class="body" set:html={mdInlineToHtml(it.body)} />}
             {it.points && it.points.length > 0 && (
               <ul class="points">
                 {it.points.map((p) => (
-                  <li>{p}</li>
+                  <li set:html={mdInlineToHtml(p)} />
                 ))}
               </ul>
             )}

@@ -9,9 +9,10 @@ import { getCollection, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import PageHeader from '../components/PageHeader.astro';
 import Prose from '../components/Prose.astro';
+import SectionLabel from '../components/SectionLabel.astro';
 import NoComments from '../components/gallery/NoComments.astro';
-import ThemePreview from '../components/gallery/ThemePreview.astro';
 import { breadcrumbJsonLd } from '../components/seo/jsonld';
+import { mdInlineToHtml } from '../lib/format';
 
 /**
  * The starter bodies are one sentence that restates the tagline plus an
@@ -43,7 +44,7 @@ const items = await Promise.all(
 );
 
 const description =
-  'Research ideas by Jason Limberis that failed at the bench, listed in his CV as unsuccessful side projects: lysis methods, host RNA depletion and selective whole-genome amplification for M. tuberculosis.';
+  'Ideas by Jason Limberis that did not work at the bench: lysis methods, host RNA depletion and selective whole-genome amplification for M. tuberculosis.';
 ---
 
 <Base
@@ -54,15 +55,16 @@ const description =
     { name: 'Things that did not work', href: '/did-not-work/' },
   ])}
 >
-  <ThemePreview slot="head" />
-
   <PageHeader
     label="Did not work"
     title="Things that did not work"
-    lede="Most ideas fail at the bench. These are some of mine that did. My CV lists them as unsuccessful side projects."
+    lede="Research ideas of mine that did not work at the bench."
   />
 
   <div class="wrap">
+    <SectionLabel label="Log">
+      <span slot="aside">{items.length} {items.length === 1 ? 'entry' : 'entries'}</span>
+    </SectionLabel>
     <ol class="list">
       {
         items.map((it) => (
@@ -70,7 +72,7 @@ const description =
             <span class="num">{it.num}</span>
             <div class="entry">
               <h2>{it.d.title}</h2>
-              <p class="statement">{it.d.tagline}</p>
+              <p class="statement" set:html={mdInlineToHtml(it.d.tagline)} />
               {it.Content && (
                 <Prose>
                   <NoComments>
@@ -99,7 +101,6 @@ const description =
     margin: 0;
     padding: 0;
     list-style: none;
-    max-width: 56rem;
     border-top: var(--hair);
   }
   .list > li {

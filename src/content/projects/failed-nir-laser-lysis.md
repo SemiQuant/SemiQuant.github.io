@@ -1,7 +1,7 @@
 ---
 title: Near-infrared laser lysis
 kind: failed
-tagline: Rapid lysis of M. tuberculosis using a custom-made near-infrared laser system.
+tagline: Rapid lysis of *M. tuberculosis* using a custom-made near-infrared laser system.
 status: Did not work
 order: 420
 tags: [hardware, tb]

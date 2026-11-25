@@ -1,7 +1,7 @@
 ---
 title: Hasan
 kind: tool
-tagline: Bacterial population reconstruction from short-read sequencing.
+tagline: Reconstructs drug-resistant subpopulations of *M. tuberculosis* from Illumina or nanopore reads.
 status: Open source
 year: 2022
 order: 100

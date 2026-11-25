@@ -1,7 +1,7 @@
 ---
 title: WHO TB Catalogue Tool
 kind: webapp
-tagline: Browse the WHO catalogue of Mycobacterium tuberculosis mutations and their association with drug resistance.
+tagline: Browse the WHO catalogue of *Mycobacterium tuberculosis* mutations and their association with drug resistance.
 status: Live
 year: 2026
 order: 210
@@ -11,4 +11,4 @@ links:
 tags: [web, tb]
 ---
 
-A single self-contained page from the DrDx.Me offline tools. It shows the catalogue with a gene map and exports mutations as CSV, VCF, BED or an annotated H37Rv GenBank file. It runs entirely in the browser and works offline. The WHO catalogue data are used under their CC BY-NC-SA license.
+A single self-contained page from the DrDx.Me offline tools. It shows the mutations with a gene map and exports them as CSV, VCF, BED or an annotated H37Rv GenBank file. It runs entirely in the browser and works offline. The WHO catalogue data are used under their CC BY-NC-SA license.

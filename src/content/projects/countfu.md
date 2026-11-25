@@ -1,7 +1,7 @@
 ---
 title: CountFU
 kind: method
-tagline: Counts Mycobacterium tuberculosis by qPCR instead of plating colonies, with results the same day.
+tagline: Counts *Mycobacterium tuberculosis* by qPCR instead of plating colonies, with results the same day.
 status: Published
 year: 2025
 featured: true
@@ -12,8 +12,8 @@ links:
   paper: https://doi.org/10.1016/j.tube.2025.102709
 publications: [limberis-2025-countfu]
 stats:
-  - label: Hands-on time for plating
-    value: 3 h over 3 to 4 days
+  - label: Hands-on time for plating, over 3 to 4 days
+    value: 3 h
   - label: Agreement with plating (ICC)
     value: "0.92"
   - label: Bias

@@ -19,4 +19,4 @@ coverAlt: Ripple Voyage title card next to an iPhone screenshot of numbered beac
 tags: [game]
 ---
 
-Beach balls float on open water, each showing a power of two, and two of a kind merge into the next one up, as in 2048. You never touch a ball. You press and hold the water, a ring shows how far the wave will carry, and letting go shoves every ball it reaches. Ella the Otter sails 230 islands of mines, whirlpools and a kraken. Free to download, with the first thirty islands free and no adverts, accounts or tracking.
+Beach balls float on open water, each showing a power of two, and two of a kind merge into the next one up, as in 2048. You never touch a ball. You press and hold the water, a ring shows how far the wave will carry, and letting go shoves every ball it reaches. Ella the Otter sails 230 islands of mines, whirlpools and a kraken. The first 30 islands are free, with no ads, accounts or tracking.

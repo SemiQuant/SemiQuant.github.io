@@ -11,6 +11,9 @@ import Seo from '../components/seo/Seo.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import { profile } from '../data/profile';
+// Preload the two text fonts so headings and mono labels do not repaint after the CSS loads.
+import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
+import monoLatin from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
 
 interface Props {
   /** Page title without the site suffix. Omit on the home page. */
@@ -42,7 +45,9 @@ const fullTitle = title ? `${title} | ${profile.shortName}` : `${profile.name} |
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <!-- Dark is the default theme; the script below swaps this for the light value. -->
-    <meta name="theme-color" content="#0b0d10" data-dark="#0b0d10" data-light="#faf9f6" />
+    <meta name="theme-color" content="#1d1f23" data-dark="#1d1f23" data-light="#faf9f6" />
+    <link rel="preload" as="font" type="font/woff2" href={interLatin} crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href={monoLatin} crossorigin />
     <Seo title={fullTitle} description={description} image={image} type={type} jsonLd={jsonLd} noindex={noindex} />
     <script is:inline>
       document.documentElement.classList.add('js');
@@ -55,6 +60,20 @@ const fullTitle = title ? `${title} | ${profile.shortName}` : `${profile.name} |
         if (m && document.documentElement.dataset.theme === 'light') m.content = m.dataset.light;
       })();
     </script>
+    {
+      /* Dev only: ?theme=light or ?theme=dark forces a theme for one page load (for screenshots). */
+      import.meta.env.DEV && (
+        <script is:inline>
+          (function () {
+            var t = new URLSearchParams(location.search).get('theme');
+            if (t !== 'light' && t !== 'dark') return;
+            document.documentElement.dataset.theme = t;
+            var m = document.querySelector('meta[name="theme-color"]');
+            if (m) m.content = t === 'light' ? m.dataset.light : m.dataset.dark;
+          })();
+        </script>
+      )
+    }
     <slot name="head" />
   </head>
   <body>
