@@ -6,7 +6,7 @@
 import { parse as parseYaml } from 'yaml';
 import pubsYaml from '../data/publications.yaml?raw';
 
-type PubLike = { id: string; data: { year: number; role: 'first' | 'joint-first' | 'middle' } };
+type PubLike = { id: string; data: { year: number; role: 'first' | 'joint-first' | 'middle'; inCv?: boolean } };
 
 const ESC: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 
@@ -60,11 +60,13 @@ export function sortPubs<T extends PubLike>(pubs: readonly T[]): T[] {
 
 /**
  * Sample-style numbers for a full publication list: the oldest entry is 1,
- * the newest is pubs.length. Pass the result to PubList as `numbers` when
- * you render a subset and want ids to match the full list.
+ * the newest is the count of CV entries. Entries with inCv false are extras:
+ * they get no number, so the highest id always matches the CV count.
+ * Pass the result to PubList as `numbers` when you render a subset and want
+ * ids to match the full list.
  */
 export function pubNumbers<T extends PubLike>(pubs: readonly T[]): Map<string, number> {
-  const sorted = sortPubs(pubs);
+  const sorted = sortPubs(pubs).filter((p) => p.data.inCv !== false);
   return new Map(sorted.map((p, i) => [p.id, sorted.length - i]));
 }
 
@@ -161,7 +163,10 @@ export function sortByDateDesc<T extends { data: { start: string | number; end: 
 /** Map a free-text project status to a StatusDot state. */
 export function statusState(status?: string): 'ok' | 'warn' | 'idle' {
   if (!status) return 'idle';
-  if (/(valid|progress|develop|review|preprint|beta|pilot|prototype|draft|testing)/i.test(status)) return 'warn';
-  if (/(live|publish|released|available|stable|active|maintained|shipped|funded)/i.test(status)) return 'ok';
+  // Negatives first, so "Unpublished", "Inactive" or "Not maintained" do not read as ok.
+  if (/\b(un\w+|inactive|not\s|no longer|did not)|archiv|retired|deprecated|abandon/i.test(status)) return 'idle';
+  // In-progress wording, without catching the finished forms "Validated" and "Reviewed".
+  if (/(in validation|validating|progress|develop|review(?!ed)|preprint|beta|pilot|prototype|draft|testing)/i.test(status)) return 'warn';
+  if (/(validated|reviewed|live|publish|released|available|stable|active|maintained|shipped|funded)/i.test(status)) return 'ok';
   return 'idle';
 }

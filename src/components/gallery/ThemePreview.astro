@@ -1,0 +1,11 @@
+---
+/**
+ * Dev-only preview hook: ?theme=light or ?theme=dark sets the theme for one
+ * page load without saving it. Renders nothing in a production build.
+ * Usage: <ThemePreview slot="head" />
+ */
+const code =
+  "(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;})();";
+---
+
+{import.meta.env.DEV && <script is:inline set:html={code} />}

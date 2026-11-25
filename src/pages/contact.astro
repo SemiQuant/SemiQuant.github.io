@@ -1,0 +1,131 @@
+---
+/** /contact/: email, affiliation, location and profile links. No form. */
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import SectionLabel from '../components/SectionLabel.astro';
+import ButtonLink from '../components/ButtonLink.astro';
+import { breadcrumbJsonLd, personJsonLd } from '../components/seo/jsonld';
+import { profile } from '../data/profile';
+
+const shortUrl = (u: string) => u.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+---
+
+<Base
+  title="Contact"
+  description={`Contact ${profile.name}, ${profile.affiliation.title} at ${profile.affiliation.orgShort}: email, affiliation and profile links.`}
+  type="profile"
+  jsonLd={[personJsonLd(), breadcrumbJsonLd([{ name: 'Home', href: '/' }, { name: 'Contact', href: '/contact/' }])]}
+>
+  <script is:inline slot="head">
+    (function () {
+      var t = new URLSearchParams(location.search).get('theme');
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    })();
+  </script>
+
+  <PageHeader
+    index="07"
+    label="Contact"
+    title="Contact"
+    lede="Write to me about a method that is not working, a collaboration, or any of the tools on this site. Email is the way to reach me."
+  >
+    <div class="cluster">
+      <ButtonLink href={`mailto:${profile.email}`}>Email me</ButtonLink>
+      <ButtonLink href="/cv/" variant="ghost">View CV</ButtonLink>
+    </div>
+  </PageHeader>
+
+  <div class="wrap">
+    <section aria-labelledby="details">
+      <SectionLabel label="Details" id="details" />
+      <dl class="rows">
+        <div class="row">
+          <dt class="key">Email</dt>
+          <dd class="main">
+            <a class="email" href={`mailto:${profile.email}`}>{profile.email}</a>
+          </dd>
+        </div>
+        <div class="row">
+          <dt class="key">Affiliation</dt>
+          <dd class="main">
+            <p>{profile.affiliation.title}</p>
+            <p class="muted">{profile.affiliation.unit}</p>
+            <p class="muted">{profile.affiliation.org}</p>
+          </dd>
+        </div>
+        <div class="row">
+          <dt class="key">Location</dt>
+          <dd class="main">{profile.location}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="block" aria-labelledby="profiles">
+      <SectionLabel label="Profiles" id="profiles" />
+      <ul class="rows">
+        {
+          profile.links.map((l) => (
+            <li class="row">
+              <p class="key">{l.label}</p>
+              <p class="main">
+                <a class="link" href={l.url} rel={l.me ? 'me noopener' : 'noopener'}>
+                  {shortUrl(l.url)}
+                </a>
+              </p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .block {
+    margin-top: var(--s-7);
+  }
+  .rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: var(--hair);
+  }
+  .row {
+    display: grid;
+    gap: var(--s-1) var(--s-5);
+    padding-block: var(--s-3);
+    border-bottom: var(--hair);
+  }
+  @media (min-width: 640px) {
+    .row {
+      grid-template-columns: 11.5rem minmax(0, 1fr);
+      align-items: baseline;
+    }
+  }
+  .key {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .main {
+    margin: 0;
+    min-width: 0;
+  }
+  .email {
+    font-family: var(--font-mono);
+    font-size: var(--fs-md);
+    overflow-wrap: anywhere;
+  }
+  .link {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  .link:hover {
+    text-decoration: underline;
+  }
+</style>

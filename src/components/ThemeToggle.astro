@@ -10,13 +10,14 @@ interface Props {
 const { class: className } = Astro.props;
 ---
 
-<button type="button" class:list={['theme-toggle', className]} data-theme-toggle aria-label="Switch to light theme">
+<button type="button" class:list={['theme-toggle', className]} data-theme-toggle title="Switch theme">
   <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
     <circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.25"></circle>
     <path class="half" d="M8 2.5a5.5 5.5 0 0 0 0 11z" fill="currentColor"></path>
   </svg>
-  <span class="state when-dark" aria-hidden="true">Dark</span>
-  <span class="state when-light" aria-hidden="true">Light</span>
+  <span class="visually-hidden">Theme:</span>
+  <span class="state when-dark">Dark</span>
+  <span class="state when-light">Light</span>
 </button>
 
 <style>
@@ -28,7 +29,7 @@ const { class: className } = Astro.props;
     padding: 0 var(--s-2);
     background: transparent;
     color: var(--muted);
-    border: var(--hair);
+    border: 1px solid var(--border-strong);
     border-radius: var(--radius);
     font-family: var(--font-mono);
     font-size: var(--fs-2xs);
@@ -44,7 +45,7 @@ const { class: className } = Astro.props;
   }
   .theme-toggle:hover {
     color: var(--text);
-    border-color: var(--border-strong);
+    border-color: var(--text);
   }
   .state {
     min-width: 5ch;
@@ -70,8 +71,6 @@ const { class: className } = Astro.props;
   const root = document.documentElement;
   const buttons = document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]');
   const sync = () => {
-    const next = root.dataset.theme === 'light' ? 'dark' : 'light';
-    buttons.forEach((b) => b.setAttribute('aria-label', `Switch to ${next} theme`));
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     if (meta) meta.content = (root.dataset.theme === 'light' ? meta.dataset.light : meta.dataset.dark) ?? meta.content;
   };

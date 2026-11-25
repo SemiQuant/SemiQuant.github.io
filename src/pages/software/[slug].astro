@@ -1,0 +1,453 @@
+---
+/**
+ * /software/<slug>/: one page per project with detail: true.
+ * Slugs are the lowercase file names in src/content/projects. The build
+ * fails if a slug is not lowercase or collides with a reserved path (repos
+ * that publish their own GitHub Pages site under semiquant.com/<name>/).
+ */
+import type { GetStaticPaths } from 'astro';
+import { Image } from 'astro:assets';
+import { getCollection, getEntries, getEntry, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
+import StatusDot from '../../components/StatusDot.astro';
+import ExternalLinks from '../../components/ExternalLinks.astro';
+import TagChip from '../../components/TagChip.astro';
+import Prose from '../../components/Prose.astro';
+import PubList from '../../components/PubList.astro';
+import { breadcrumbJsonLd, softwareJsonLd } from '../../components/seo/jsonld';
+import { reservedPaths } from '../../data/profile';
+import { formatRange, kindLabel, pubNumbers, statusState } from '../../lib/format';
+
+export const getStaticPaths = (async () => {
+  const detail = (await getCollection('projects', (p) => p.data.detail)).sort(
+    (a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title),
+  );
+  const reserved = new Set(reservedPaths.map((r) => r.toLowerCase()));
+  for (const p of detail) {
+    if (p.id !== p.id.toLowerCase()) {
+      throw new Error(
+        `Project slug "${p.id}" must be lowercase: rename src/content/projects/${p.id}.md so the route is /software/${p.id.toLowerCase()}/.`,
+      );
+    }
+    if (reserved.has(p.id.toLowerCase())) {
+      throw new Error(
+        `Project slug "${p.id}" collides with a reserved path (${reservedPaths.join(', ')}; see reservedPaths in src/data/profile.ts). ` +
+          `Rename src/content/projects/${p.id}.md or set detail: false.`,
+      );
+    }
+  }
+  return detail.map((project, i) => ({
+    params: { slug: project.id },
+    props: { project, prev: detail[i - 1], next: detail[i + 1] },
+  }));
+}) satisfies GetStaticPaths;
+
+const { project, prev, next } = Astro.props;
+const d = project.data;
+
+const { Content } = await render(project);
+const allPubs = await getCollection('publications');
+const pubs = d.publications.length > 0 ? (await getEntries(d.publications)).filter(Boolean) : [];
+const grant = d.grant ? await getEntry(d.grant) : undefined;
+
+const path = `/software/${project.id}/`;
+const jsonLd = [
+  softwareJsonLd(project, pubs),
+  breadcrumbJsonLd([
+    { name: 'Home', href: '/' },
+    { name: 'Methods & software', href: '/software/' },
+    { name: d.title, href: path },
+  ]),
+];
+---
+
+<Base title={d.title} description={d.tagline} jsonLd={jsonLd}>
+  <nav class="crumbs wrap" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/software/"><span aria-hidden="true">&larr;</span> Methods &amp; software</a></li>
+      <li aria-current="page">{d.title}</li>
+    </ol>
+  </nav>
+
+  <PageHeader index="02" label={`Methods & software / ${kindLabel(d.kind)}`} title={d.title} lede={d.tagline} />
+
+  <div class="wrap">
+    <div class="layout">
+      <aside class="panel" aria-label="Project details">
+        <dl class="facts">
+          <div>
+            <dt>Kind</dt>
+            <dd>{kindLabel(d.kind)}</dd>
+          </div>
+          {
+            d.status && (
+              <div>
+                <dt>Status</dt>
+                <dd>
+                  <StatusDot state={statusState(d.status)} label={d.status} />
+                </dd>
+              </div>
+            )
+          }
+          {
+            d.year && (
+              <div>
+                <dt>Year</dt>
+                <dd>{d.year}</dd>
+              </div>
+            )
+          }
+        </dl>
+
+        {
+          d.stats.length > 0 && (
+            <dl class="readout">
+              {d.stats.map((s) => (
+                <div>
+                  <dt>{s.label}</dt>
+                  <dd>{s.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )
+        }
+
+        {
+          Object.values(d.links).some(Boolean) && (
+            <div class="panel-block">
+              <p class="panel-label">Links</p>
+              <ExternalLinks links={d.links} label={`${d.title} links`} />
+            </div>
+          )
+        }
+
+        {
+          d.tags.length > 0 && (
+            <div class="panel-block">
+              <p class="panel-label">Tags</p>
+              <ul class="cluster tags" style="--gap: var(--s-2)">
+                {d.tags.map((t) => (
+                  <li>
+                    <TagChip>{t}</TagChip>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )
+        }
+      </aside>
+
+      <article class="main">
+        {
+          d.cover && (
+            <figure class="cover">
+              <Image
+                src={d.cover}
+                alt={d.coverAlt ?? ''}
+                widths={[480, 800, d.cover.width]}
+                sizes="(min-width: 960px) 44rem, calc(100vw - 2rem)"
+                loading="eager"
+              />
+            </figure>
+          )
+        }
+        <Prose><Content /></Prose>
+      </article>
+    </div>
+
+    {
+      pubs.length > 0 && (
+        <section class="block" aria-labelledby="publications">
+          <SectionLabel label={pubs.length === 1 ? 'Publication' : 'Publications'} id="publications">
+            <a slot="aside" href="/publications/">
+              All publications
+            </a>
+          </SectionLabel>
+          <PubList pubs={pubs} numbers={pubNumbers(allPubs)} />
+        </section>
+      )
+    }
+
+    {
+      grant && (
+        <section class="block" aria-labelledby="funding">
+          <SectionLabel label="Funding" id="funding">
+            <a slot="aside" href="/research/">
+              Research and funding
+            </a>
+          </SectionLabel>
+          <div class="grant">
+            <p class="grant-meta">
+              <span>{grant.data.funder}</span>
+              <span class="num">{formatRange(grant.data.start, grant.data.end)}</span>
+              <span>{grant.data.role}</span>
+            </p>
+            <h3>{grant.data.title}</h3>
+            <p class="grant-summary">{grant.data.summary}</p>
+          </div>
+        </section>
+      )
+    }
+
+    <nav class="pager" aria-label="More methods and software">
+      {
+        prev ? (
+          <a class="prev" href={`/software/${prev.id}/`} rel="prev">
+            <span class="dir">
+              <span aria-hidden="true">&larr;</span> Previous
+            </span>
+            <span class="name">{prev.data.title}</span>
+          </a>
+        ) : (
+          <a class="prev" href="/software/">
+            <span class="dir">
+              <span aria-hidden="true">&larr;</span> Back to
+            </span>
+            <span class="name">All methods and software</span>
+          </a>
+        )
+      }
+      {
+        next ? (
+          <a class="next" href={`/software/${next.id}/`} rel="next">
+            <span class="dir">
+              Next <span aria-hidden="true">&rarr;</span>
+            </span>
+            <span class="name">{next.data.title}</span>
+          </a>
+        ) : (
+          <a class="next" href="/software/">
+            <span class="dir">
+              Back to <span aria-hidden="true">&rarr;</span>
+            </span>
+            <span class="name">All methods and software</span>
+          </a>
+        )
+      }
+    </nav>
+  </div>
+</Base>
+
+<style>
+  .crumbs {
+    padding-top: var(--s-5);
+    margin-bottom: calc(-1 * var(--s-5));
+    position: relative;
+    z-index: 1;
+  }
+  .crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1) var(--s-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--muted);
+  }
+  .crumbs li + li::before {
+    content: '/';
+    margin-right: var(--s-3);
+    color: var(--faint);
+  }
+  .crumbs a {
+    text-decoration: none;
+  }
+  .crumbs a:hover {
+    text-decoration: underline;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-6);
+    margin-bottom: var(--s-8);
+  }
+  @media (min-width: 960px) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr) 19rem;
+      gap: var(--s-8);
+      align-items: start;
+    }
+    .panel {
+      grid-column: 2;
+      grid-row: 1;
+      position: sticky;
+      top: calc(var(--nav-h) + var(--s-5));
+    }
+    .main {
+      grid-column: 1;
+      grid-row: 1;
+    }
+  }
+  .main {
+    min-width: 0;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: var(--hair);
+    border-top: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+  }
+  .panel > * {
+    padding: var(--s-4);
+  }
+  .panel > * + * {
+    border-top: var(--hair);
+  }
+  .panel dl {
+    margin: 0;
+  }
+  .facts {
+    display: grid;
+    gap: var(--s-3);
+  }
+  .facts div {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--s-3);
+  }
+  .panel dt,
+  .panel-label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    line-height: 1.4;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .panel dd {
+    margin: 0;
+  }
+  .facts dd {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .readout {
+    display: grid;
+    gap: var(--s-4);
+  }
+  .readout div {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: var(--s-1);
+  }
+  .readout dd {
+    font-family: var(--font-mono);
+    font-size: var(--fs-lg);
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+  }
+  .panel-label {
+    margin-bottom: var(--s-2);
+  }
+  .tags {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .tags li {
+    display: flex;
+  }
+
+  .cover {
+    margin: 0 0 var(--s-6);
+    max-width: var(--measure);
+    background: var(--surface-2);
+    border: var(--hair);
+    border-radius: var(--radius);
+  }
+  .cover :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 30rem;
+    object-fit: contain;
+  }
+
+  .block {
+    margin-bottom: var(--s-8);
+  }
+  .grant {
+    display: grid;
+    gap: var(--s-2);
+    max-width: 52rem;
+    padding-left: var(--s-4);
+    border-left: 2px solid var(--accent);
+  }
+  .grant-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1) var(--s-4);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    line-height: 1.4;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+  }
+  .grant h3 {
+    font-size: var(--fs-md);
+    line-height: var(--lh-snug);
+  }
+  .grant-summary {
+    font-size: var(--fs-sm);
+    line-height: 1.55;
+    color: var(--muted);
+    max-width: var(--measure);
+  }
+
+  .pager {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-4);
+    padding-top: var(--s-5);
+    margin-bottom: var(--s-8);
+    border-top: 1px solid var(--border-strong);
+  }
+  .pager a {
+    display: grid;
+    gap: var(--s-1);
+    padding: var(--s-3) var(--s-4);
+    border: var(--hair);
+    border-radius: var(--radius);
+    background: var(--surface);
+    text-decoration: none;
+    transition: border-color var(--dur);
+  }
+  .pager a:hover {
+    border-color: var(--border-strong);
+  }
+  .pager .next {
+    text-align: right;
+  }
+  .dir {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .name {
+    font-size: var(--fs-base);
+    font-weight: 560;
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+  .pager a:hover .name {
+    color: var(--accent-text);
+  }
+</style>

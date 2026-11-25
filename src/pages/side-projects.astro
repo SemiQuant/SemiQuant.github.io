@@ -1,0 +1,240 @@
+---
+/**
+ * /side-projects/: projects of kind "game" and "side", sorted by `order`,
+ * as feature rows (cover where the entry has one, rendered Markdown body,
+ * stats, links).
+ */
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import SectionLabel from '../components/SectionLabel.astro';
+import ButtonLink from '../components/ButtonLink.astro';
+import Prose from '../components/Prose.astro';
+import StatusDot from '../components/StatusDot.astro';
+import ThemePreview from '../components/gallery/ThemePreview.astro';
+import { breadcrumbJsonLd } from '../components/seo/jsonld';
+import { statusState } from '../lib/format';
+
+const all = (await getCollection('projects', (p) => p.data.kind === 'game' || p.data.kind === 'side')).sort(
+  (a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title),
+);
+
+const rows = await Promise.all(
+  all.map(async (entry) => {
+    const d = entry.data;
+    const { Content } = await render(entry);
+    // A game that ships on the App Store has a website, not a browser build.
+    const webLabel = d.kind === 'game' ? (d.links.appstore ? 'Website' : 'Play in browser') : 'Open in browser';
+    const links = [
+      d.links.web && { text: webLabel, url: d.links.web, primary: !d.links.appstore },
+      d.links.appstore && { text: 'App Store', url: d.links.appstore, primary: true },
+      d.links.repo && { text: 'Repo', url: d.links.repo, primary: false },
+      d.links.pypi && { text: 'PyPI', url: d.links.pypi, primary: false },
+    ].filter((l): l is { text: string; url: string; primary: boolean } => !!l);
+    return { id: entry.id, d, Content, links };
+  }),
+);
+
+const groups = [
+  { label: 'Games', id: 'games', items: rows.filter((r) => r.d.kind === 'game') },
+  { label: 'Tools', id: 'tools', items: rows.filter((r) => r.d.kind === 'side') },
+].filter((g) => g.items.length > 0);
+
+const description =
+  'Things Jason Limberis made outside the lab: the iPhone puzzle game Ripple Voyage, a browser game, and two open-source tools for 3D printing.';
+---
+
+<Base
+  title="Side projects"
+  description={description}
+  jsonLd={breadcrumbJsonLd([
+    { name: 'Home', href: '/' },
+    { name: 'Side projects', href: '/side-projects/' },
+  ])}
+>
+  <ThemePreview slot="head" />
+
+  <PageHeader index="05" label="Side projects" title="Side projects" lede="Things I made outside the lab." />
+
+  <div class="wrap">
+    {
+      groups.map((g) => (
+        <section class="group" aria-labelledby={g.id}>
+          <SectionLabel label={g.label} id={g.id}>
+            <span slot="aside" class="label">
+              {g.items.length}
+            </span>
+          </SectionLabel>
+          {g.items.map((r) => (
+            <article class:list={['row', { 'has-cover': !!r.d.cover }]} aria-labelledby={`${r.id}-title`}>
+              {r.d.cover && (
+                <div class="cover">
+                  <Image
+                    src={r.d.cover}
+                    alt={r.d.coverAlt ?? ''}
+                    width={Math.min(r.d.cover.width, 1200)}
+                    widths={[640, 960, 1200].filter((w) => w <= r.d.cover!.width)}
+                    sizes="(min-width: 960px) 40rem, 100vw"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+              <div class="head">
+                <p class="meta">
+                  {r.d.year && <span class="year">{r.d.year}</span>}
+                  {r.d.status && <StatusDot state={statusState(r.d.status)} label={r.d.status} />}
+                </p>
+                <h3 id={`${r.id}-title`}>{r.d.title}</h3>
+                <p class="tagline">{r.d.tagline}</p>
+              </div>
+              <div class="detail">
+                <Prose>
+                  <r.Content />
+                </Prose>
+                {r.d.stats.length > 0 && (
+                  <dl class="stats">
+                    {r.d.stats.map((s) => (
+                      <div>
+                        <dt>{s.label}</dt>
+                        <dd>{s.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+                {r.links.length > 0 && (
+                  <div class="cluster">
+                    {r.links.map((l) => (
+                      <ButtonLink href={l.url} variant={l.primary ? 'primary' : 'ghost'} external>
+                        {l.text}
+                      </ButtonLink>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </article>
+          ))}
+        </section>
+      ))
+    }
+
+    <p class="also">
+      Not everything worked. Some of the ideas that failed are listed under
+      <a href="/did-not-work/">things that did not work</a>.
+    </p>
+  </div>
+</Base>
+
+<style>
+  .group {
+    margin-bottom: var(--s-7);
+  }
+  .row {
+    display: grid;
+    gap: var(--s-4);
+    padding-block: var(--s-6);
+    border-bottom: var(--hair);
+  }
+  .row > * {
+    min-width: 0;
+  }
+  .cover {
+    background: var(--surface-2);
+    border: var(--hair);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .cover :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-1) var(--s-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    line-height: 1.2;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+  }
+  .year {
+    color: var(--accent-text);
+    font-variant-numeric: tabular-nums;
+  }
+  h3 {
+    font-size: var(--fs-xl);
+    line-height: var(--lh-tight);
+    letter-spacing: -0.02em;
+  }
+  .tagline {
+    font-size: var(--fs-md);
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .detail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-5);
+  }
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-4) var(--s-6);
+    margin: 0;
+    padding-top: var(--s-4);
+    border-top: var(--hair);
+  }
+  .stats div {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: var(--s-1);
+  }
+  .stats dt {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .stats dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-lg);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .also {
+    margin-bottom: var(--s-8);
+    color: var(--muted);
+  }
+  .also a {
+    color: var(--accent-text);
+  }
+
+  @media (min-width: 960px) {
+    .row {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      column-gap: var(--s-7);
+      row-gap: var(--s-5);
+      padding-block: var(--s-7);
+    }
+    /* With a cover: picture on the right, heading and detail stacked on the left. */
+    .row.has-cover .cover {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      align-self: start;
+    }
+    .row.has-cover .head,
+    .row.has-cover .detail {
+      grid-column: 1;
+    }
+  }
+</style>

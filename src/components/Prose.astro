@@ -6,6 +6,9 @@
  *   const { Content } = await render(entry);
  *   <Prose><Content /></Prose>
  * Pass wide to drop the measure limit.
+ * A small script wraps each table in a .table-scroll div, so the table keeps
+ * its semantics and the wrapper scrolls. Wrappers and code blocks that
+ * overflow become keyboard focusable.
  */
 interface Props {
   wide?: boolean;
@@ -85,7 +88,9 @@ const { wide = false, class: className } = Astro.props;
     border: var(--hair);
     border-radius: var(--radius);
     font-size: 0.85em;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
   .prose pre {
     padding: var(--s-4);
@@ -128,11 +133,17 @@ const { wide = false, class: className } = Astro.props;
     line-height: 1.45;
     color: var(--muted);
   }
-  .prose table {
+  .prose .table-scroll {
+    overflow-x: auto;
+  }
+  /* Without JavaScript there is no wrapper, so the table itself scrolls. */
+  html:not(.js) .prose table {
     display: block;
-    width: 100%;
     max-width: 100%;
     overflow-x: auto;
+  }
+  .prose table {
+    width: 100%;
     border-collapse: collapse;
     font-size: var(--fs-sm);
     font-variant-numeric: tabular-nums;
@@ -143,6 +154,15 @@ const { wide = false, class: className } = Astro.props;
     border-bottom: var(--hair);
     text-align: left;
     vertical-align: top;
+  }
+  /* First and last cells sit flush with the text column. */
+  .prose th:first-child,
+  .prose td:first-child {
+    padding-left: 0;
+  }
+  .prose th:last-child,
+  .prose td:last-child {
+    padding-right: 0;
   }
   .prose th {
     font-family: var(--font-mono);
@@ -162,3 +182,41 @@ const { wide = false, class: className } = Astro.props;
     font-size: 0.8em;
   }
 </style>
+
+<script>
+  // Tables keep display: table (and their semantics); a wrapper scrolls instead.
+  document.querySelectorAll<HTMLTableElement>('.prose table').forEach((table) => {
+    if (table.parentElement?.classList.contains('table-scroll')) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'table-scroll';
+    table.before(wrap);
+    wrap.appendChild(table);
+  });
+
+  // Only regions that really scroll take a tab stop.
+  const scrollers = Array.from(document.querySelectorAll<HTMLElement>('.prose .table-scroll, .prose pre'));
+  const update = (el: HTMLElement) => {
+    const isTable = el.classList.contains('table-scroll');
+    if (el.scrollWidth > el.clientWidth + 1) {
+      el.tabIndex = 0;
+      if (isTable) {
+        el.setAttribute('role', 'region');
+        el.setAttribute('aria-label', el.querySelector('caption')?.textContent?.trim() || 'Table');
+      }
+    } else {
+      el.removeAttribute('tabindex');
+      if (isTable) {
+        el.removeAttribute('role');
+        el.removeAttribute('aria-label');
+      }
+    }
+  };
+  if (scrollers.length > 0) {
+    if ('ResizeObserver' in window) {
+      const ro = new ResizeObserver((entries) => entries.forEach((e) => update(e.target as HTMLElement)));
+      scrollers.forEach((el) => ro.observe(el));
+    } else {
+      scrollers.forEach(update);
+    }
+  }
+</script>

@@ -35,7 +35,7 @@ const items = ORDER.flatMap(([key, text]) => (links?.[key] ? [{ key, text, url: 
           <a href={l.url} rel="noopener">
             {l.text}
             <span class="arrow" aria-hidden="true">
-              &#8599;
+              <svg viewBox="0 0 10 10" width="9" height="9" focusable="false"><path d="M2.5 7.5l5-5M3.5 2.5h4v4" fill="none" stroke="currentColor" stroke-width="1.25"></path></svg>
             </span>
           </a>
         </li>
@@ -67,7 +67,7 @@ const items = ORDER.flatMap(([key, text]) => (links?.[key] ? [{ key, text, url: 
     text-decoration: underline;
   }
   .arrow {
-    font-size: 0.85em;
-    opacity: 0.8;
+    align-self: center;
+    flex: none;
   }
 </style>

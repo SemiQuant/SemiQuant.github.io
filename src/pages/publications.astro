@@ -1,0 +1,240 @@
+---
+/**
+ * /publications/ : CV publication list (filterable), extras that are not in
+ * the CV, and the patent. Counts are computed from the collection and checked
+ * against the CV numbers below, so the build fails if the data drifts.
+ */
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import SectionLabel from '../components/SectionLabel.astro';
+import StatStrip from '../components/StatStrip.astro';
+import ButtonLink from '../components/ButtonLink.astro';
+import PubList from '../components/PubList.astro';
+import { breadcrumbJsonLd, publicationsJsonLd } from '../components/seo/jsonld';
+import { profile } from '../data/profile';
+import { pubCounts, sortPubs } from '../lib/format';
+
+/** The counts printed in the CV. Update together with src/data/publications.yaml. */
+const CV_COUNTS = { total: 36, firstOrJoint: 12 };
+
+const all = await getCollection('publications');
+const cvPubs = sortPubs(all.filter((p) => p.data.inCv));
+const extras = sortPubs(all.filter((p) => !p.data.inCv));
+const counts = pubCounts(cvPubs);
+
+if (counts.total !== CV_COUNTS.total || counts.firstOrJoint !== CV_COUNTS.firstOrJoint) {
+  throw new Error(
+    `publications.astro: src/data/publications.yaml has ${counts.total} CV publications ` +
+      `(${counts.firstOrJoint} first or joint first), but the CV says ${CV_COUNTS.total} ` +
+      `(${CV_COUNTS.firstOrJoint}). Fix the data (check the inCv and role fields) or update CV_COUNTS.`,
+  );
+}
+
+const link = (label: string) => {
+  const found = profile.links.find((l) => l.label === label);
+  if (!found) throw new Error(`publications.astro: profile.links has no "${label}" entry.`);
+  return found.url;
+};
+const pubmedUrl = link('PubMed');
+const protocolsUrl = link('protocols.io');
+
+const patents = (await getCollection('patents')).sort((a, b) => b.data.year - a.data.year);
+
+const stats = [
+  { value: counts.total, label: 'Publications' },
+  { value: counts.firstOrJoint, label: 'First or joint first author' },
+  { value: profile.metrics.hIndex, label: 'h-index' },
+  { value: profile.metrics.citations.toLocaleString('en-US'), label: 'Citations' },
+];
+
+const description =
+  `${counts.total} publications by ${profile.name} on tuberculosis diagnostics, drug resistance and genomics, ` +
+  `${counts.firstOrJoint} as first or joint first author, with DOI and PubMed links.`;
+
+// The textbook chapter lists "Contributing author" in place of names. That is
+// fine on the page, but it is not a person, so drop it from the structured data.
+type ListItem = { item?: { author?: { name?: string }[] } };
+const pubsLd = publicationsJsonLd(cvPubs);
+for (const el of (pubsLd.itemListElement ?? []) as ListItem[]) {
+  if (!el.item?.author) continue;
+  el.item.author = el.item.author.filter((a) => a.name !== 'Contributing author');
+  if (el.item.author.length === 0) delete el.item.author;
+}
+
+const jsonLd = [
+  pubsLd,
+  breadcrumbJsonLd([
+    { name: 'Home', href: '/' },
+    { name: 'Publications', href: '/publications/' },
+  ]),
+];
+---
+
+<Base title="Publications" description={description} jsonLd={jsonLd}>
+  <PageHeader
+    index="03"
+    label="Publications"
+    title="Publications"
+    lede="Every publication listed in my CV, newest first, with DOI and PubMed links. Filter by authorship, type or year, or search titles, authors and journals."
+  >
+    <StatStrip stats={stats} stamp={`as of ${profile.metrics.asOf}`} label="Publication figures" />
+    <div class="records">
+      <p class="label">Full records</p>
+      <div class="cluster">
+        <ButtonLink href={pubmedUrl} variant="ghost" external>PubMed bibliography</ButtonLink>
+        <ButtonLink href={protocolsUrl} variant="ghost" external>protocols.io</ButtonLink>
+      </div>
+    </div>
+  </PageHeader>
+
+  <div class="wrap">
+    <section class="block" aria-labelledby="pub-list">
+      <SectionLabel label="Publication list" id="pub-list">
+        <span slot="aside">{counts.total} entries</span>
+      </SectionLabel>
+      <PubList pubs={cvPubs} filterable />
+      <p class="note">
+        An asterisk marks joint first authors. My name is in bold. Ids count up from the oldest entry
+        (P-001) to the newest.
+      </p>
+    </section>
+
+    {
+      extras.length > 0 && (
+        <section class="block" aria-labelledby="pub-extras">
+          <SectionLabel label="Preprints not listed in the CV" id="pub-extras">
+            <span slot="aside">{extras.length} {extras.length === 1 ? 'entry' : 'entries'}</span>
+          </SectionLabel>
+          <p class="note lead">
+            These are not part of the {counts.total} above and are not counted in the figures at the top of the page.
+          </p>
+          <PubList pubs={extras} showIds={false} />
+        </section>
+      )
+    }
+
+    {
+      patents.length > 0 && (
+        <section class="block" aria-labelledby="pub-patents">
+          <SectionLabel label={patents.length === 1 ? 'Patent' : 'Patents'} id="pub-patents" />
+          <ul class="patents">
+            {patents.map(({ data: p }) => (
+              <li class="patent">
+                <p class="meta">
+                  <span>{p.year}</span>
+                  <span class="status">{p.status}</span>
+                </p>
+                <div class="body">
+                  <h3>{p.title}</h3>
+                  <p class="inventors">{p.inventors}</p>
+                  <p class="detail">{p.detail}</p>
+                  {p.url && (
+                    <p class="ext">
+                      <a href={p.url} rel="noopener">
+                        <span class="k">Link</span> {new URL(p.url).hostname.replace(/^www\./, '')}
+                      </a>
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  .records {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3) var(--s-5);
+    margin-top: var(--s-5);
+  }
+  .block {
+    margin-bottom: var(--s-8);
+  }
+  .note {
+    max-width: var(--measure);
+    margin-top: var(--s-4);
+    font-size: var(--fs-sm);
+    color: var(--muted);
+  }
+  .note.lead {
+    margin-top: 0;
+    margin-bottom: var(--s-4);
+  }
+  .patents {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--border-strong);
+  }
+  .patent {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-2) var(--s-5);
+    padding-block: var(--s-4);
+    border-bottom: var(--hair);
+  }
+  @media (min-width: 640px) {
+    .patent {
+      grid-template-columns: 4.25rem minmax(0, 1fr);
+    }
+    .meta {
+      flex-direction: column;
+      align-items: flex-start;
+      padding-top: 0.15rem;
+    }
+  }
+  .meta {
+    display: flex;
+    gap: var(--s-1) var(--s-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    line-height: 1.6;
+    font-variant-numeric: tabular-nums;
+    color: var(--faint);
+  }
+  .status {
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .body {
+    display: grid;
+    gap: 0.3rem;
+    max-width: 52rem;
+  }
+  h3 {
+    font-size: var(--fs-base);
+    font-weight: 560;
+    line-height: 1.4;
+    letter-spacing: -0.005em;
+  }
+  .inventors,
+  .detail {
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .ext {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    line-height: 1.6;
+  }
+  .ext a {
+    text-decoration: none;
+  }
+  .ext a:hover {
+    text-decoration: underline;
+  }
+  .k {
+    color: var(--faint);
+    letter-spacing: 0.04em;
+  }
+</style>

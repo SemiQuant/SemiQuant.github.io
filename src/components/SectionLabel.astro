@@ -31,8 +31,9 @@ const idx = index === undefined ? undefined : String(index).padStart(2, '0');
 <style>
   .section-label {
     display: flex;
+    flex-wrap: wrap;
     align-items: flex-end;
-    gap: var(--s-3);
+    gap: var(--s-2) var(--s-3);
     margin-bottom: var(--s-5);
   }
   .text {
@@ -47,7 +48,13 @@ const idx = index === undefined ? undefined : String(index).padStart(2, '0');
     text-transform: uppercase;
     font-variant-numeric: tabular-nums;
     color: var(--text);
-    white-space: nowrap;
+    min-width: 0;
+  }
+  .text > span {
+    flex: none;
+  }
+  .text > span:last-child {
+    flex: 0 1 auto;
   }
   .idx {
     color: var(--accent-text);
@@ -58,7 +65,7 @@ const idx = index === undefined ? undefined : String(index).padStart(2, '0');
   /* Hairline with minor ticks every 8px and a taller tick every 40px. */
   .ticks {
     flex: 1;
-    min-width: 2rem;
+    min-width: 1rem;
     height: 7px;
     background:
       linear-gradient(var(--border), var(--border)) left bottom / 100% 1px no-repeat,
@@ -72,6 +79,12 @@ const idx = index === undefined ? undefined : String(index).padStart(2, '0');
     color: var(--muted);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+  }
+  /* Phones: a long label keeps the first row; the aside drops below it. */
+  @media (max-width: 419.98px) {
+    .aside {
+      flex-basis: 100%;
+    }
   }
   .aside :global(a) {
     text-decoration: none;

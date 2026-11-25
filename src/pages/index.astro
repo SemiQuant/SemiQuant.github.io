@@ -1,15 +1,454 @@
 ---
+/**
+ * Home page: who he is, what he builds, the featured work and papers,
+ * current funding and how to reach him. Facts come from the collections
+ * and src/data/profile.ts; the prose is distilled from the CV Profile.
+ */
+import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import { getCollection, getEntry } from 'astro:content';
-const pubs = await getCollection('publications');
+import { profile } from '../data/profile';
+import { formatRange, pubCounts, pubNumbers, sortByDateDesc, sortPubs } from '../lib/format';
+import { personJsonLd, websiteJsonLd } from '../components/seo/jsonld';
+import ButtonLink from '../components/ButtonLink.astro';
+import SectionLabel from '../components/SectionLabel.astro';
+import StatStrip from '../components/StatStrip.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import PubList from '../components/PubList.astro';
+import QpcrCurve from '../components/QpcrCurve.astro';
+
+const pubs = sortPubs(await getCollection('publications'));
+const cvPubs = pubs.filter((p) => p.data.inCv);
+const counts = pubCounts(cvPubs);
+const numbers = pubNumbers(pubs);
+const featuredPubs = pubs.filter((p) => p.data.featured);
+
+const stats = [
+  { value: counts.total, label: 'Publications' },
+  { value: counts.firstOrJoint, label: 'First or joint first' },
+  { value: profile.metrics.hIndex, label: 'h-index' },
+  { value: profile.metrics.citations.toLocaleString('en-US'), label: 'Citations' },
+];
+
 const projects = await getCollection('projects');
-const exp = await getCollection('experience');
-const p0 = projects[0];
-const linked = p0 ? await Promise.all(p0.data.publications.map((r) => getEntry(r))) : [];
+const featured = projects
+  .filter((p) => p.data.featured)
+  .sort((a, b) => a.data.order - b.data.order || a.id.localeCompare(b.id))
+  .slice(0, 6);
+const hasDetail = (id: string) => projects.some((p) => p.id === id && p.data.detail);
+const projectHref = (id: string) => (hasDetail(id) ? `/software/${id}/` : '/software/');
+
+const CURRENT_YEAR = 2026;
+const currentGrants = sortByDateDesc((await getCollection('grants')).filter((g) => g.data.end >= CURRENT_YEAR));
+
+const github = profile.links.find((l) => l.label === 'GitHub');
+const description =
+  'Jason D. Limberis is an infectious disease researcher at UCSF working on tuberculosis diagnostics. He generates and analyzes his own data, and builds the protocols, software and devices a question needs.';
 ---
-<Base>
-  <div class="wrap">
-    <h1>Scaffold</h1>
-    <p class="mono">{pubs.length} pubs, {projects.length} projects, {exp.length} roles, linked: {linked.map((l) => l?.id).join(',')}</p>
-  </div>
+
+<Base description={description} type="profile" jsonLd={[personJsonLd(), websiteJsonLd()]}>
+  <Fragment slot="head">
+    {
+      import.meta.env.DEV && (
+        <script is:inline>
+          (function () {
+            var t = new URLSearchParams(location.search).get('theme');
+            if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+          })();
+        </script>
+      )
+    }
+  </Fragment>
+
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="stack hero-copy">
+        <p class="label">{profile.affiliation.title}, {profile.affiliation.orgShort}</p>
+        <h1>{profile.name}</h1>
+        <p class="role">
+          <span>{profile.role}</span>
+          <span class="role-focus">Molecular diagnostics, <em>M. tuberculosis</em> genomics, computational biology</span>
+        </p>
+        <p class="lede">
+          I generate and analyze the data I work with. I build what a question needs, whether that is a protocol, a
+          software package, or a device, and then I analyze what comes out of it.
+        </p>
+        <div class="cluster actions">
+          <ButtonLink href="/publications/" variant="primary">Publications</ButtonLink>
+          <ButtonLink href="/cv/" variant="ghost">CV</ButtonLink>
+          {github && <ButtonLink href={github.url} variant="ghost" external>GitHub</ButtonLink>}
+          <ButtonLink href="/contact/" variant="ghost">Contact</ButtonLink>
+        </div>
+      </div>
+      <div class="hero-plot">
+        <QpcrCurve />
+      </div>
+    </div>
+    <div class="wrap">
+      <StatStrip stats={stats} stamp={`as of ${profile.metrics.asOf}`} label="Publication record" />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <SectionLabel label="About" />
+      <div class="about">
+        <p class="about-lead">
+          I design and run wet lab experiments, optimize techniques when they do not work, and build the computational
+          pipelines needed to interpret the results. That combination is unusual, and it is the reason I can take a
+          question from idea to answer without handing it off halfway.
+        </p>
+        <div class="stack about-body">
+          <p>
+            I grew up in South Africa, where tuberculosis was not an abstraction, with many of my close friends and
+            their families directly affected. That is what drew me to <em>Mycobacterium tuberculosis</em> research, and I
+            have spent my career since studying the genomic and transcriptional correlates of drug resistance, treatment
+            outcomes, and patient infectiousness. I now work at UCSF, developing tuberculosis diagnostics and performing
+            data analysis for several labs.
+          </p>
+          <p>
+            <em>M. tuberculosis</em> has a sturdy cell wall that defeats standard extraction and amplification chemistry.
+            Most published protocols fail on it, so I rebuild them. We publish methods, and each one started as a failure
+            at the bench.
+          </p>
+          <p>
+            I also audit methods that the field has stopped questioning. We reviewed 73 studies that bead-beat
+            mycobacteria and then tested the unreported variables. Tube shape and bead volume alone changed DNA yield. A
+            de facto gold standard turned out to be unstandardized. And when no instrument existed at the price allowed
+            by the problem, we built one.
+          </p>
+          <p><a href="/research/">Research and funding</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section tight">
+    <div class="wrap">
+      <SectionLabel label="What I build" />
+      <ul class="build-grid">
+        <li class="build">
+          <p class="label">A protocol</p>
+          <h3>Methods</h3>
+          <p>
+            <a href={projectHref('spotpcr')}>spotPCR</a> tags individual template molecules with unique molecular identifiers
+            in a single nested PCR, eliminating the ligation, cleanup, and exonuclease digestion steps of conventional UMI
+            workflows.
+          </p>
+          <p>
+            <a href={projectHref('countfu')}>CountFU</a> replaces colony counting with qPCR. Plating costs three hours of
+            hands-on work spread over 3 to 4 days.
+          </p>
+          <p class="more"><a href="/software/">All methods</a></p>
+        </li>
+        <li class="build">
+          <p class="label">A software package</p>
+          <h3>Software</h3>
+          <p>
+            <a href={projectHref('primerjinn')}>primerJinn</a> designs multiplex PCR sets and runs <em>in silico</em> PCR
+            against input genomes. <a href={projectHref('uradime')}>URAdime</a> works backwards from sequencing reads and
+            names the primers that generate dimers and super-amplicons.
+          </p>
+          <p>
+            I write tools in R and Python for colleagues who do not code, including browser-based versions that need no
+            installation.
+          </p>
+          <p class="more"><a href="/software/">All software</a></p>
+        </li>
+        <li class="build">
+          <p class="label">A device</p>
+          <h3>Hardware</h3>
+          <p>
+            <a href={projectHref('turbolysis')}>turboLysis</a> lyses <em>M. tuberculosis</em> for $40, against more than
+            $2,000 for commercial bead beaters. It outperformed a commercial bead beater on 200,000 bacilli in buffer.
+          </p>
+          <p>
+            The current build is fully automated and battery-powered, heats the sample to render it biosafe before lysis,
+            and costs $12.50 to produce.
+          </p>
+          <p class="more"><a href="/builds/">Lab builds</a></p>
+        </li>
+      </ul>
+      <p class="systems">
+        <span class="label">Assembled</span>
+        <span>
+          These pieces assemble into systems. <a href={projectHref('xpertnano')}>XpertNano</a> moves extraction, amplification,
+          UMI tagging, and nanopore library preparation into a GeneXpert cartridge. GeneXpert runs in 182 countries.
+        </span>
+      </p>
+    </div>
+  </section>
+
+  <section class="section tight">
+    <div class="wrap">
+      <SectionLabel label="Featured work">
+        <a slot="aside" href="/software/">All methods and software</a>
+      </SectionLabel>
+      <ul class="cards">
+        {
+          featured.map((p) => (
+            <li>
+              <ProjectCard project={p} href={p.data.detail ? `/software/${p.id}/` : undefined} />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section tight">
+    <div class="wrap">
+      <SectionLabel label="Selected publications">
+        <a slot="aside" href="/publications/">All {counts.total} publications</a>
+      </SectionLabel>
+      <PubList pubs={featuredPubs} numbers={numbers} />
+    </div>
+  </section>
+
+  <section class="section tight">
+    <div class="wrap">
+      <SectionLabel label="Current funding">
+        <a slot="aside" href="/research/">Research</a>
+      </SectionLabel>
+      <ul class="grants">
+        {
+          currentGrants.map((g) => (
+            <li class="grant">
+              <span class="mono grant-when">{formatRange(g.data.start, g.data.end)}</span>
+              <span class="grant-main">
+                <span class="grant-title">{g.data.title}</span>
+                <span class="grant-meta">
+                  {g.data.funder} · {g.data.role}
+                </span>
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="section tight last">
+    <div class="wrap">
+      <SectionLabel label="Contact" />
+      <div class="contact">
+        <a class="mono contact-email" href={`mailto:${profile.email}`}>{profile.email}</a>
+        <ul class="cluster contact-links">
+          {
+            profile.links.map((l) => (
+              <li>
+                <a class="mono" href={l.url} rel={l.me ? 'me noopener' : 'noopener'}>
+                  {l.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </section>
 </Base>
+
+<style>
+  /* Hero */
+  .hero {
+    padding-block: var(--s-7) 0;
+  }
+  .hero-grid {
+    display: grid;
+    gap: var(--s-6);
+    align-items: center;
+    padding-bottom: var(--s-7);
+  }
+  .hero-copy {
+    --gap: var(--s-5);
+    min-width: 0;
+  }
+  .hero-plot {
+    min-width: 0;
+  }
+  .role {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-snug);
+    color: var(--text);
+  }
+  .role-focus {
+    color: var(--muted);
+  }
+  .hero .lede {
+    color: var(--text);
+    max-width: 34rem;
+  }
+  .actions {
+    margin-top: var(--s-2);
+  }
+  @media (min-width: 960px) {
+    .hero {
+      padding-top: var(--s-8);
+    }
+    .hero-grid {
+      grid-template-columns: minmax(0, 11fr) minmax(0, 10fr);
+      gap: var(--s-7);
+      padding-bottom: var(--s-8);
+    }
+  }
+
+  /* Sections after the first sit closer together than the default rhythm. */
+  .section.tight {
+    padding-top: 0;
+  }
+  .section.last {
+    padding-bottom: var(--s-8);
+  }
+
+  /* About */
+  .about {
+    display: grid;
+    gap: var(--s-5);
+  }
+  .about-lead {
+    font-size: var(--fs-lg);
+    line-height: var(--lh-snug);
+    letter-spacing: -0.01em;
+    max-width: 30rem;
+  }
+  .about-body {
+    --gap: var(--s-4);
+    max-width: var(--measure);
+    color: var(--muted);
+  }
+  .about-body a,
+  .more a,
+  .section :global(.aside a) {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+  }
+  @media (min-width: 960px) {
+    .about {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--s-7);
+    }
+  }
+
+  /* What I build */
+  .build-grid {
+    display: grid;
+    list-style: none;
+    padding: 0;
+    border-top: 1px solid var(--border-strong);
+  }
+  .build {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    padding-block: var(--s-5);
+    border-bottom: var(--hair);
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    line-height: var(--lh-body);
+  }
+  .build h3 {
+    color: var(--text);
+  }
+  .build .more {
+    margin-top: auto;
+    padding-top: var(--s-2);
+  }
+  @media (min-width: 800px) {
+    .build-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      border-bottom: var(--hair);
+    }
+    .build {
+      padding: var(--s-5);
+      border-bottom: 0;
+      border-left: var(--hair);
+    }
+    .build:last-child {
+      border-right: var(--hair);
+    }
+  }
+  .systems {
+    display: grid;
+    gap: var(--s-2);
+    margin-top: var(--s-5);
+    font-size: var(--fs-sm);
+    color: var(--muted);
+  }
+  .systems .label {
+    color: var(--accent-text);
+    padding-top: 0.25em;
+  }
+  @media (min-width: 800px) {
+    .systems {
+      grid-template-columns: 7rem minmax(0, var(--measure));
+      gap: var(--s-5);
+    }
+  }
+
+  /* Funding */
+  .grants {
+    list-style: none;
+    padding: 0;
+    border-top: var(--hair);
+  }
+  .grant {
+    display: grid;
+    gap: var(--s-1);
+    padding-block: var(--s-3);
+    border-bottom: var(--hair);
+  }
+  .grant-when {
+    font-size: var(--fs-sm);
+    color: var(--faint);
+    white-space: nowrap;
+  }
+  .grant-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-1);
+  }
+  .grant-title {
+    font-weight: 560;
+    line-height: var(--lh-snug);
+  }
+  .grant-meta {
+    font-size: var(--fs-sm);
+    color: var(--muted);
+  }
+  @media (min-width: 640px) {
+    .grant {
+      grid-template-columns: 8rem minmax(0, 1fr);
+      gap: var(--s-5);
+      align-items: baseline;
+    }
+  }
+
+  /* Contact */
+  .contact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-4) var(--s-6);
+  }
+  .contact-email {
+    font-size: var(--fs-md);
+    overflow-wrap: anywhere;
+  }
+  .contact-links {
+    --gap: var(--s-2) var(--s-5);
+    list-style: none;
+    padding: 0;
+    font-size: var(--fs-sm);
+  }
+  .contact-links a {
+    color: var(--muted);
+  }
+  .contact-links a:hover {
+    color: var(--accent-text);
+  }
+</style>

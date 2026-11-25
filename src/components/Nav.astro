@@ -121,7 +121,7 @@ const isActive = (href: string) => path === href || path.startsWith(href);
     padding: 0 var(--s-3);
     background: transparent;
     color: var(--text);
-    border: var(--hair);
+    border: 1px solid var(--border-strong);
     border-radius: var(--radius);
     font-family: var(--font-mono);
     font-size: var(--fs-2xs);
@@ -130,7 +130,7 @@ const isActive = (href: string) => path === href || path.startsWith(href);
     cursor: pointer;
   }
   .menu-btn:hover {
-    border-color: var(--border-strong);
+    border-color: var(--text);
   }
   .bars {
     display: grid;

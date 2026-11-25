@@ -1,0 +1,692 @@
+---
+/**
+ * /cv/: the full CV rendered from the collections.
+ * Print styles live in src/styles/cv-print.css (A4, light, compact) and
+ * scripts/cv-pdf.sh prints this page to public/files/Jason-Limberis-CV.pdf.
+ * The #cv wrapper id is the hook for those print rules.
+ */
+import '@fontsource-variable/inter/wght-italic.css';
+import '../styles/cv-print.css';
+import { getCollection } from 'astro:content';
+import { parse as parseYaml } from 'yaml';
+import cvYaml from '../data/cv.yaml?raw';
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import SectionLabel from '../components/SectionLabel.astro';
+import StatStrip from '../components/StatStrip.astro';
+import Timeline from '../components/Timeline.astro';
+import ButtonLink from '../components/ButtonLink.astro';
+import { breadcrumbJsonLd, personJsonLd } from '../components/seo/jsonld';
+import { profile } from '../data/profile';
+import {
+  doiUrl,
+  escapeHtml,
+  formatRange,
+  isOwner,
+  mdInlineToHtml,
+  pmidUrl,
+  pubCounts,
+  pubTypeLabel,
+  sortByDateDesc,
+  sortPubs,
+} from '../lib/format';
+
+const experience = sortByDateDesc(await getCollection('experience'));
+const education = sortByDateDesc(await getCollection('education'));
+const grants = sortByDateDesc(await getCollection('grants'));
+
+// cv.yaml lists these in CV order; getCollection may not keep it.
+const SKILL_ORDER = ['computational', 'statistics-and-ml', 'laboratory', 'engineering'];
+const skills = (await getCollection('skills')).sort((a, b) => SKILL_ORDER.indexOf(a.id) - SKILL_ORDER.indexOf(b.id));
+const awards = (await getCollection('awards')).sort((a, b) => b.data.year - a.data.year);
+const patents = (await getCollection('patents')).sort((a, b) => b.data.year - a.data.year);
+
+const yamlOrder = (key: string): string[] =>
+  ((parseYaml(cvYaml)?.[key] ?? []) as { id: string }[]).map((r) => String(r.id));
+const byYaml = <T extends { id: string }>(items: T[], key: string): T[] => {
+  const order = yamlOrder(key);
+  return [...items].sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+};
+const training = byYaml(await getCollection('training'), 'training');
+const protocols = byYaml(await getCollection('protocols'), 'protocols');
+
+const projects = (await getCollection('projects')).sort(
+  (a, b) => (b.data.year ?? 0) - (a.data.year ?? 0) || a.data.order - b.data.order,
+);
+const webapps = projects.filter((p) => p.data.kind === 'webapp');
+const pipelines = projects.filter((p) => p.data.kind === 'pipeline' || p.data.kind === 'tool');
+
+const pubs = sortPubs((await getCollection('publications')).filter((p) => p.data.inCv));
+const counts = pubCounts(pubs);
+
+const [asOfYear, asOfMonth] = profile.metrics.asOf.split('-').map(Number);
+const asOfText = new Date(Date.UTC(asOfYear, (asOfMonth || 1) - 1, 1)).toLocaleDateString('en-US', {
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+
+const stats = [
+  { value: counts.total, label: 'Publications' },
+  { value: counts.firstOrJoint, label: 'First or joint first' },
+  { value: profile.metrics.hIndex, label: 'h-index' },
+  { value: profile.metrics.citations.toLocaleString('en-US'), label: 'Citations' },
+];
+
+const toTimeline = (when: string, title: string, meta: string, extra: { points?: readonly string[]; body?: string; current?: boolean } = {}) => ({
+  when,
+  title,
+  meta,
+  ...extra,
+});
+const experienceItems = experience.map((e) =>
+  toTimeline(formatRange(e.data.start, e.data.end), e.data.role, `${e.data.org} · ${e.data.place}`, {
+    points: e.data.points,
+    current: /present/i.test(e.data.end),
+  }),
+);
+const educationItems = education.map((e) =>
+  toTimeline(formatRange(e.data.start, e.data.end), e.data.degree, `${e.data.org} · ${e.data.place}`, { body: e.data.note }),
+);
+
+/** "https://github.com/SemiQuant/Hasan/" to "github.com/SemiQuant/Hasan". */
+const shortUrl = (u: string) => u.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+const projectUrls = (links: Record<string, string | undefined>) =>
+  [links.web, links.repo].filter((u): u is string => Boolean(u));
+
+/** Skill bodies are plain text; a leading "Label:" on a line is set in bold. */
+const skillLines = (body: string) =>
+  body
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const m = line.match(/^([A-Z][A-Za-z ]{2,24}):\s+(.*)$/);
+      return m ? { lead: m[1], text: m[2] } : { lead: undefined, text: line };
+    });
+
+/** Citation-style author list: owner in bold, joint first authors starred. */
+function authorsHtml(pub: (typeof pubs)[number]): string {
+  const d = pub.data;
+  const ownerIndex = d.authors.findIndex((a) => isOwner(a));
+  let out = '';
+  d.authors.forEach((raw, i) => {
+    const marked = /\*\s*$/.test(raw);
+    const name = raw.replace(/\*\s*$/, '').trim();
+    const joint = marked || (d.role === 'joint-first' && ownerIndex >= 0 && i <= ownerIndex);
+    const html =
+      (isOwner(name) ? `<strong>${escapeHtml(name)}</strong>` : escapeHtml(name)) +
+      (joint ? '<span aria-hidden="true">*</span><span class="visually-hidden"> (joint first author)</span>' : '');
+    const prev = i > 0 ? d.authors[i - 1].trim() : '';
+    out += i === 0 ? html : (prev === '…' || prev === '...' ? ' ' : ', ') + html;
+  });
+  return /\.$/.test(out) ? out : `${out}.`;
+}
+const endStop = (title: string) => (/[.?!]$/.test(title.replace(/\*/g, '')) ? '' : '.');
+const hasJoint = pubs.some((p) => p.data.role === 'joint-first' || p.data.authors.some((a) => /\*\s*$/.test(a)));
+
+const tagline = [profile.role, profile.focus.map((f, i) => (i === 0 || /^Mycobacterium/.test(f) ? f : f[0].toLowerCase() + f.slice(1))).join(', ')].join(' · ');
+const taglineHtml = escapeHtml(tagline).replace('Mycobacterium tuberculosis', '<em>Mycobacterium tuberculosis</em>');
+const protocolsIo = profile.links.find((l) => l.label === 'protocols.io');
+
+const sections = [
+  { id: 'profile', label: 'Profile' },
+  { id: 'experience', label: 'Experience' },
+  { id: 'education', label: 'Education' },
+  { id: 'skills', label: 'Skills' },
+  { id: 'awards', label: 'Awards' },
+  { id: 'training', label: 'Certificates and training' },
+  { id: 'web-applications', label: 'Web applications' },
+  { id: 'pipelines', label: 'Analysis pipelines and tools' },
+  { id: 'funded-projects', label: 'Funded projects' },
+  { id: 'publications', label: 'Publications' },
+  { id: 'patent', label: patents.length === 1 ? 'Patent' : 'Patents' },
+  { id: 'protocols', label: 'Protocols' },
+];
+const label = (id: string) => sections.find((s) => s.id === id)?.label ?? id;
+
+const description = `CV of ${profile.name}, ${profile.affiliation.title} at ${profile.affiliation.orgShort}: experience, education, skills, funded projects, software and ${counts.total} publications.`;
+---
+
+<Base
+  title="CV"
+  description={description}
+  type="profile"
+  jsonLd={[personJsonLd(), breadcrumbJsonLd([{ name: 'Home', href: '/' }, { name: 'CV', href: '/cv/' }])]}
+>
+  <script is:inline slot="head">
+    (function () {
+      var t = new URLSearchParams(location.search).get('theme');
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    })();
+  </script>
+
+  <div id="cv">
+    <!-- Print only: the name and contact block at the top of the PDF. -->
+    <div class="cv-masthead" aria-hidden="true">
+      <p class="cv-name">{profile.name}</p>
+      <p class="cv-tagline" set:html={taglineHtml} />
+      <p class="cv-contact">
+        <span>{profile.location}</span><span class="bar">|</span><span>{profile.email}</span><span class="bar">|</span><span>semiquant.com</span>
+      </p>
+    </div>
+
+    <PageHeader
+      index="06"
+      label="CV"
+      title="Curriculum vitae"
+      lede={`${profile.name}. ${profile.affiliation.title}, ${profile.affiliation.unit}, ${profile.affiliation.org}.`}
+    >
+      <div class="cluster">
+        <ButtonLink href={profile.cvPdf} download="Jason-Limberis-CV.pdf">Download PDF</ButtonLink>
+        <ButtonLink href="/contact/" variant="ghost">Contact</ButtonLink>
+      </div>
+    </PageHeader>
+
+    <div class="wrap cv-layout">
+      <nav class="cv-nav" aria-label="CV sections">
+        <p class="label cv-nav-title">On this page</p>
+        <ol>
+          {sections.map((s) => <li><a href={`#${s.id}`}>{s.label}</a></li>)}
+        </ol>
+      </nav>
+
+      <div class="cv-body">
+        <section class="cv-section cv-profile" aria-labelledby="profile">
+          <SectionLabel label={label('profile')} id="profile" />
+          <p class="profile-text">
+            I am an infectious disease researcher who both generates and analyzes the data I work with. I design and run
+            wet lab experiments, optimize techniques when they do not work, and build the computational pipelines needed
+            to interpret the results. I work at UCSF, developing tuberculosis diagnostics and performing data analysis
+            for several labs.
+          </p>
+        </section>
+
+        <section class="cv-section" aria-labelledby="experience">
+          <SectionLabel label={label('experience')} id="experience" />
+          <Timeline items={experienceItems} />
+        </section>
+
+        <section class="cv-section" aria-labelledby="education">
+          <SectionLabel label={label('education')} id="education" />
+          <Timeline items={educationItems} />
+        </section>
+
+        <section class="cv-section" aria-labelledby="skills">
+          <SectionLabel label={label('skills')} id="skills" />
+          <dl class="rows">
+            {
+              skills.map((s) => (
+                <div class="row">
+                  <dt class="key caps">{s.data.label}</dt>
+                  <dd class="main">
+                    {skillLines(s.data.body).map((l) => (
+                      <p class="d">
+                        {l.lead && <strong>{l.lead}:</strong>} {l.text}
+                      </p>
+                    ))}
+                  </dd>
+                </div>
+              ))
+            }
+          </dl>
+        </section>
+
+        <section class="cv-section" aria-labelledby="awards">
+          <SectionLabel label={label('awards')} id="awards" />
+          <ul class="rows">
+            {
+              awards.map((a) => (
+                <li class="row">
+                  <p class="key">{a.data.year}</p>
+                  <div class="main">
+                    <p class="t">{a.data.title}</p>
+                    <p class="d">{a.data.org}</p>
+                  </div>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+
+        <section class="cv-section" aria-labelledby="training">
+          <SectionLabel label={label('training')} id="training">
+            <span slot="aside">{training.length} items</span>
+          </SectionLabel>
+          <ul class="twoup">
+            {
+              training.map((t) => (
+                <li>
+                  <p class="ct">{t.data.title}</p>
+                  <p class="cm">{t.data.provider}</p>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+
+        <section class="cv-section" aria-labelledby="web-applications">
+          <SectionLabel label={label('web-applications')} id="web-applications" />
+          <ul class="rows">
+            {
+              webapps.map((p) => (
+                <li class="row">
+                  <p class="key">{p.data.year}</p>
+                  <div class="main">
+                    <p class="t">{p.data.title}</p>
+                    <p class="d">{p.data.tagline}</p>
+                    <p class="u">
+                      {projectUrls(p.data.links).map((u) => (
+                        <a href={u} rel="noopener">
+                          {shortUrl(u)}
+                        </a>
+                      ))}
+                    </p>
+                  </div>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+
+        <section class="cv-section" aria-labelledby="pipelines">
+          <SectionLabel label={label('pipelines')} id="pipelines" />
+          <ul class="rows">
+            {
+              pipelines.map((p) => (
+                <li class="row">
+                  <p class="key">{p.data.year}</p>
+                  <div class="main">
+                    <p class="t">{p.data.title}</p>
+                    <p class="d">{p.data.tagline}</p>
+                    <p class="u">
+                      {projectUrls(p.data.links).map((u) => (
+                        <a href={u} rel="noopener">
+                          {shortUrl(u)}
+                        </a>
+                      ))}
+                    </p>
+                  </div>
+                </li>
+              ))
+            }
+          </ul>
+          <p class="more">
+            Methods and flagship tools are on the <a href="/software/">methods and software</a> page.
+          </p>
+        </section>
+
+        <section class="cv-section" aria-labelledby="funded-projects">
+          <SectionLabel label={label('funded-projects')} id="funded-projects" />
+          <ul class="grants">
+            {
+              grants.map((g) => (
+                <li>
+                  <p class="t">{g.data.title}</p>
+                  <p class="gm">
+                    {formatRange(g.data.start, g.data.end)} · {g.data.funder}
+                  </p>
+                  <p class="d">
+                    <span class="rl">Role:</span> {g.data.role}. {g.data.summary}
+                  </p>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+
+        <section class="cv-section" aria-labelledby="publications">
+          <SectionLabel label={label('publications')} id="publications">
+            <span slot="aside">{counts.total} items</span>
+          </SectionLabel>
+          <StatStrip stats={stats} stamp={`as of ${profile.metrics.asOf}`} label="Publication metrics" />
+          <ol class="cv-pubs">
+            {
+              pubs.map((pub) => {
+                const d = pub.data;
+                return (
+                  <li>
+                    <span class="au" set:html={authorsHtml(pub)} />{' '}
+                    {d.type === 'chapter' ? (
+                      <cite set:html={mdInlineToHtml(d.title) + endStop(d.title)} />
+                    ) : (
+                      <span class="ttl" set:html={mdInlineToHtml(d.title) + endStop(d.title)} />
+                    )}{' '}
+                    {d.journal && d.type !== 'chapter' && <cite>{d.journal}.</cite>}{' '}
+                    <span class="src">{`${d.type === 'chapter' && d.journal ? `${d.journal}; ` : ''}${d.year}${d.citation ? `;${d.citation}` : ''}.`}</span>{' '}
+                    {d.doi && (
+                      <a class="idl" href={doiUrl(d.doi)} rel="noopener">
+                        doi:{d.doi}
+                      </a>
+                    )}{' '}
+                    {d.pmid && (
+                      <a class="idl" href={pmidUrl(d.pmid)} rel="noopener">
+                        PMID: {d.pmid}
+                      </a>
+                    )}{' '}
+                    {!d.doi && !d.pmid && d.url && (
+                      <a class="idl" href={d.url} rel="noopener">
+                        {shortUrl(d.url)}
+                      </a>
+                    )}{' '}
+                    {(d.type === 'preprint' || d.type === 'software') && <span class="tag">{pubTypeLabel(d.type)}</span>}
+                  </li>
+                );
+              })
+            }
+          </ol>
+          <p class="footnote">
+            {hasJoint && '* Joint first authorship. '}Citation metrics current as of {asOfText}.
+            <span class="screen-only">
+              {' '}Searchable list on the <a href="/publications/">publications</a> page.
+            </span>
+          </p>
+        </section>
+
+        <section class="cv-section" aria-labelledby="patent">
+          <SectionLabel label={label('patent')} id="patent" />
+          <ul class="rows">
+            {
+              patents.map((p) => (
+                <li class="row">
+                  <p class="key">
+                    {p.data.year}
+                    <span class="sub">{p.data.status}</span>
+                  </p>
+                  <div class="main">
+                    <p class="t">{p.data.title}</p>
+                    <p class="d">
+                      {p.data.inventors}. {p.data.detail}
+                    </p>
+                    {p.data.url && (
+                      <p class="u">
+                        <a href={p.data.url} rel="noopener">
+                          {shortUrl(p.data.url)}
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+
+        <section class="cv-section" aria-labelledby="protocols">
+          <SectionLabel label={label('protocols')} id="protocols" />
+          <ul class="rows">
+            {
+              protocols.map((p) => (
+                <li class="row">
+                  <p class="key">{p.data.name}</p>
+                  <div class="main">
+                    <p class="d strong">{p.data.description}</p>
+                    <p class="d">{p.data.authors}.</p>
+                    {p.data.url && (
+                      <p class="u">
+                        <a href={p.data.url} rel="noopener">
+                          {shortUrl(p.data.url)}
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                </li>
+              ))
+            }
+          </ul>
+          {
+            protocolsIo && (
+              <p class="more">
+                Full record: <a href={protocolsIo.url} rel="noopener">{shortUrl(protocolsIo.url)}</a>
+              </p>
+            )
+          }
+        </section>
+
+        <p class="refs-line">References available on request.</p>
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .cv-masthead {
+    display: none;
+  }
+  .cv-layout {
+    display: grid;
+    gap: var(--s-6);
+  }
+  .cv-body {
+    min-width: 0;
+  }
+  .cv-nav-title {
+    margin-bottom: var(--s-2);
+    font-size: var(--fs-2xs);
+    color: var(--faint);
+  }
+  .cv-nav ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--s-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+  }
+  .cv-nav a {
+    display: inline-block;
+    padding-block: 0.3rem;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .cv-nav a:hover {
+    color: var(--accent-text);
+    text-decoration: underline;
+  }
+  @media (min-width: 960px) {
+    .cv-layout {
+      grid-template-columns: 12rem minmax(0, 1fr);
+      gap: var(--s-7);
+    }
+    .cv-nav {
+      position: sticky;
+      top: calc(var(--nav-h) + var(--s-5));
+      align-self: start;
+    }
+    .cv-nav ol {
+      flex-direction: column;
+      padding-left: var(--s-3);
+      border-left: var(--hair);
+    }
+  }
+  .cv-section + .cv-section {
+    margin-top: var(--s-7);
+  }
+  .profile-text {
+    max-width: var(--measure);
+  }
+
+  /* Key and value rows: skills, awards, software, patent, protocols. */
+  .rows {
+    display: grid;
+    gap: var(--s-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .row {
+    display: grid;
+    gap: var(--s-1) 0;
+  }
+  @media (min-width: 640px) {
+    /* 14.5rem lines the value column up with the Timeline content column. */
+    .row {
+      grid-template-columns: 14.5rem minmax(0, 1fr);
+    }
+  }
+  .key {
+    margin: 0;
+    padding-right: var(--s-4);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    line-height: 1.8;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+  }
+  .key.caps {
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+  }
+  .key .sub {
+    display: block;
+    color: var(--faint);
+  }
+  .main {
+    display: grid;
+    gap: 0.2rem;
+    margin: 0;
+    max-width: var(--measure);
+    min-width: 0;
+  }
+  .t {
+    font-weight: 620;
+    line-height: var(--lh-snug);
+  }
+  .d {
+    font-size: var(--fs-sm);
+    line-height: 1.55;
+    color: var(--muted);
+  }
+  .d strong,
+  .d.strong {
+    color: var(--text);
+  }
+  .u {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--s-4);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    line-height: 1.7;
+  }
+  .u a,
+  .more a,
+  .footnote a {
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  .u a:hover,
+  .more a:hover,
+  .footnote a:hover {
+    text-decoration: underline;
+  }
+  .more {
+    margin-top: var(--s-4);
+    font-size: var(--fs-sm);
+    color: var(--muted);
+  }
+
+  .twoup {
+    columns: 2 18rem;
+    column-gap: var(--s-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .twoup li {
+    break-inside: avoid;
+    padding-bottom: var(--s-3);
+  }
+  .ct {
+    font-size: var(--fs-sm);
+    line-height: var(--lh-snug);
+  }
+  .cm {
+    font-size: var(--fs-xs);
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  .grants {
+    display: grid;
+    gap: var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .grants li {
+    display: grid;
+    gap: 0.25rem;
+    max-width: 52rem;
+  }
+  .gm {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+  }
+  .rl {
+    font-style: italic;
+    color: var(--faint);
+  }
+
+  .cv-pubs {
+    margin: var(--s-5) 0 0;
+    padding-left: 2.25rem;
+    max-width: 56rem;
+    font-size: var(--fs-sm);
+    line-height: 1.55;
+    color: var(--muted);
+  }
+  .cv-pubs li + li {
+    margin-top: var(--s-3);
+  }
+  .cv-pubs li::marker {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-variant-numeric: tabular-nums;
+    color: var(--faint);
+  }
+  .cv-pubs :global(strong),
+  .ttl {
+    color: var(--text);
+  }
+  .cv-pubs cite {
+    font-style: italic;
+  }
+  .idl {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  .idl:hover {
+    text-decoration: underline;
+  }
+  .tag {
+    display: inline-block;
+    padding: 0.05rem 0.35rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    line-height: 1.3;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .footnote {
+    margin-top: var(--s-4);
+    font-size: var(--fs-xs);
+    color: var(--muted);
+  }
+  .refs-line {
+    margin-top: var(--s-7);
+    padding-top: var(--s-4);
+    border-top: var(--hair);
+    font-size: var(--fs-sm);
+    color: var(--muted);
+  }
+</style>

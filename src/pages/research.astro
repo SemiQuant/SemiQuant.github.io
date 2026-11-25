@@ -1,0 +1,473 @@
+---
+/**
+ * /research/: research themes, funded projects, patent, protocols.
+ * Theme copy is written from the CV Profile and experience bullets. Project
+ * and publication links are resolved from the collections by id, so titles,
+ * journals and years are never retyped here.
+ */
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import SectionLabel from '../components/SectionLabel.astro';
+import Timeline from '../components/Timeline.astro';
+import StatusDot from '../components/StatusDot.astro';
+import ButtonLink from '../components/ButtonLink.astro';
+import { breadcrumbJsonLd } from '../components/seo/jsonld';
+import { doiUrl, formatRange, kindLabel, mdInlineToHtml, pmidUrl, sortByDateDesc, statusState } from '../lib/format';
+
+const [allPubs, allProjects, allGrants, patents, protocolEntries] = await Promise.all([
+  getCollection('publications'),
+  getCollection('projects'),
+  getCollection('grants'),
+  getCollection('patents'),
+  getCollection('protocols'),
+]);
+
+const pubById = new Map(allPubs.map((p) => [p.id, p]));
+const projectById = new Map(allProjects.map((p) => [p.id, p]));
+
+/** Detail page for flagships, the software index for the rest. */
+const projectHref = (id: string) => (projectById.get(id)?.data.detail ? `/software/${id}/` : '/software/');
+/** Inline link to a project, labeled with its title from the collection. */
+const sw = (id: string) => {
+  const p = projectById.get(id);
+  return p ? `<a href="${projectHref(id)}">${p.data.title}</a>` : id;
+};
+const pubHref = (id: string) => {
+  const d = pubById.get(id)?.data;
+  if (!d) return undefined;
+  return d.doi ? doiUrl(d.doi) : d.pmid ? pmidUrl(d.pmid) : d.url;
+};
+
+const mtb = '<em>M. tuberculosis</em>';
+
+const themes = [
+  {
+    id: 'decentralized-sequencing',
+    title: 'Decentralized sequencing for drug resistance',
+    html: `I wrote the specific aims for the funded R01 behind ${sw('xpertnano')}, which moves extraction, amplification, UMI tagging and nanopore library preparation into a GeneXpert cartridge. GeneXpert runs in 182 countries. The targets are 15 minutes of hands-on time, at least 1000x depth and at least 99% accuracy relative to whole-genome sequencing, with a pilot across South Africa. We have already sequenced bedaquiline resistance from sputum on a cartridge workflow.`,
+    projects: ['xpertnano'],
+    pubs: ['limberis-2024-cartridge', 'limberis-2023-rv0678', 'ismail-2021-bedaquiline-variants'],
+  },
+  {
+    id: 'sample-preparation',
+    title: 'Sample preparation and lysis',
+    html: `${mtb} has a sturdy cell wall that defeats standard extraction and amplification chemistry. ${sw('turbolysis')} lyses it for $40, against more than $2,000 for commercial bead beaters. The current build, funded by a Gates Grand Challenges grant, is fully automated and battery-powered, heats the sample to render it biosafe before lysis, and costs $12.50 to produce. We also reviewed 73 studies that bead-beat mycobacteria and tested the unreported variables: tube shape and bead volume alone changed DNA yield.`,
+    projects: ['turbolysis'],
+    pubs: ['limberis-2024-turbolysis', 'limberis-2025-beadbeating-review', 'limberis-2025-beadbeating-jove'],
+  },
+  {
+    id: 'method-development',
+    title: 'PCR and sequencing method development',
+    html: `Most published protocols fail on ${mtb}, so I rebuild them. Each method started as a failure at the bench. ${sw('primerjinn')} designs multiplex PCR sets and runs in silico PCR against input genomes, and ${sw('uradime')} works backwards from sequencing reads to name the primers that generate dimers and super-amplicons. ${sw('spotpcr')} tags individual template molecules with unique molecular identifiers in a single nested PCR, ${sw('stilpcr')} raises the effective read length of Illumina targeted sequencing, ${sw('selseq')} enriches non-polyadenylated RNAs, and ${sw('countfu')} replaces colony counting with qPCR.`,
+    projects: ['primerjinn', 'uradime', 'spotpcr', 'stilpcr', 'selseq', 'countfu'],
+    pubs: [
+      'limberis-2025-countfu',
+      'limberis-2025-uradime',
+      'limberis-2024-spotpcr',
+      'limberis-2024-stilpcr',
+      'limberis-2023-primerjinn',
+      'limberis-2023-selseq',
+    ],
+  },
+  {
+    id: 'infectiousness-outcomes-host',
+    title: 'Infectiousness, outcomes and host response',
+    html: `I analyze what I generate and what others generate. In Cape Town I led the bioinformatics group and co-authored the analysis of cough aerosol culture positivity in drug-resistant versus drug-susceptible TB, which established bacterial and host determinants of patient infectiousness. I was joint first author of a prospective cohort study of outcomes, infectiousness and transmission in extensively drug-resistant TB. At UCSF I perform data analysis for several labs, including RNA-seq from sorted immune cell subsets of infected mice.`,
+    projects: [],
+    pubs: ['theron-2020-cough-aerosol', 'dheda-2017-xdr-outcomes', 'zheng-2026-ifng', 'zheng-2024-lysosome-poor'],
+  },
+].map((t) => ({
+  ...t,
+  projects: t.projects.flatMap((id) => {
+    const p = projectById.get(id);
+    return p ? [{ id, title: p.data.title, kind: kindLabel(p.data.kind), href: projectHref(id) }] : [];
+  }),
+  pubs: t.pubs.flatMap((id) => {
+    const p = pubById.get(id);
+    return p
+      ? [{ id, titleHtml: mdInlineToHtml(p.data.title), href: pubHref(id), journal: p.data.journal, year: p.data.year }]
+      : [];
+  }),
+}));
+
+const thisYear = new Date().getFullYear();
+const grants = sortByDateDesc(allGrants);
+const isCurrent = (g: (typeof grants)[number]) => g.data.start <= thisYear && g.data.end >= thisYear;
+const grantItems = grants.map((g) => ({
+  when: formatRange(g.data.start, g.data.end),
+  title: g.data.title,
+  meta: `${g.data.funder} · Role: ${g.data.role}`,
+  body: g.data.summary,
+  current: isCurrent(g),
+}));
+const currentCount = grants.filter(isCurrent).length;
+
+// Keep the CV order (the order in cv.yaml), which getCollection does not guarantee.
+const PROTOCOL_ORDER = ['easydb', 'udumbell', 'selseq', 'bead-beating', 'single-cell-prep', 'polysome-profiling'];
+const rank = (id: string) => {
+  const i = PROTOCOL_ORDER.indexOf(id);
+  return i === -1 ? PROTOCOL_ORDER.length : i;
+};
+const protocols = [...protocolEntries].sort((a, b) => rank(a.id) - rank(b.id));
+const protocolsProfile = 'https://www.protocols.io/researchers/jason-limberis1';
+
+const failedCount = allProjects.filter((p) => p.data.kind === 'failed').length;
+
+const description =
+  'Research themes, funded projects, patent and protocols: decentralized sequencing for tuberculosis drug resistance, sample preparation and lysis, PCR and sequencing methods, and analysis of infectiousness, outcomes and host response.';
+---
+
+<Base
+  title="Research"
+  description={description}
+  jsonLd={breadcrumbJsonLd([
+    { name: 'Home', href: '/' },
+    { name: 'Research', href: '/research/' },
+  ])}
+>
+  {
+    import.meta.env.DEV && (
+      <script
+        is:inline
+        set:html={`(function(){var t=new URLSearchParams(location.search).get('theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;})();`}
+      />
+    )
+  }
+
+  <PageHeader
+    index="01"
+    label="Research"
+    title="Research"
+    lede="I study the genomic and transcriptional correlates of drug resistance, treatment outcomes and patient infectiousness in Mycobacterium tuberculosis. I now work at UCSF, developing tuberculosis diagnostics and performing data analysis for several labs."
+  />
+
+  <div class="wrap">
+    <section class="block" aria-labelledby="themes">
+      <SectionLabel label="Themes" id="themes">
+        <span slot="aside" class="label">{themes.length} themes</span>
+      </SectionLabel>
+      <ol class="themes">
+        {
+          themes.map((t, i) => (
+            <li class="theme" id={t.id}>
+              <div class="theme-main">
+                <p class="label theme-no">T{i + 1}</p>
+                <h3>{t.title}</h3>
+                <p class="theme-text" set:html={t.html} />
+              </div>
+              <div class="theme-refs">
+                {t.projects.length > 0 && (
+                  <div>
+                    <h4 class="label">Methods and software</h4>
+                    <ul class="ref-projects">
+                      {t.projects.map((p) => (
+                        <li>
+                          <a href={p.href}>{p.title}</a>
+                          <span class="ref-meta">{p.kind}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {t.pubs.length > 0 && (
+                  <div>
+                    <h4 class="label">Papers</h4>
+                    <ul class="ref-pubs">
+                      {t.pubs.map((p) => (
+                        <li>
+                          {p.href ? (
+                            <a href={p.href} rel="noopener" set:html={p.titleHtml} />
+                          ) : (
+                            <span set:html={p.titleHtml} />
+                          )}
+                          <span class="ref-meta">
+                            {p.journal ? `${p.journal}, ` : ''}
+                            {p.year}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+      <p class="more">
+        <a href="/software/">All methods and software</a>
+        <a href="/publications/">All publications</a>
+      </p>
+    </section>
+
+    <section class="block" aria-labelledby="funded-projects">
+      <SectionLabel label="Funded projects" id="funded-projects">
+        <span slot="aside" class="label">{grants.length} projects, {currentCount} current</span>
+      </SectionLabel>
+      <Timeline items={grantItems} />
+    </section>
+
+    <div class="grid-12 block">
+      <section style="--md:5" aria-labelledby="patent">
+        <SectionLabel label={patents.length === 1 ? 'Patent' : 'Patents'} id="patent" />
+        <ul class="patents">
+          {
+            patents.map((p) => (
+              <li class="patent">
+                <p class="patent-head">
+                  <span class="mono">{p.data.year}</span>
+                  <StatusDot state={statusState(p.data.status)} label={p.data.status} />
+                </p>
+                <h3>{p.data.title}</h3>
+                <p class="patent-inventors">{p.data.inventors}</p>
+                <p class="patent-detail">{p.data.detail}</p>
+                {p.data.url && (
+                  <p class="patent-link">
+                    <a href={p.data.url} rel="noopener">
+                      Google Patents
+                    </a>
+                  </p>
+                )}
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section style="--md:7" aria-labelledby="protocols">
+        <SectionLabel label="Protocols" id="protocols">
+          <a slot="aside" class="label aside-link" href={protocolsProfile} rel="noopener me">protocols.io profile</a>
+        </SectionLabel>
+        <dl class="protocols">
+          {
+            protocols.map((p) => (
+              <div class="protocol">
+                <dt class="mono">{p.data.url ? <a href={p.data.url} rel="noopener">{p.data.name}</a> : p.data.name}</dt>
+                <dd>
+                  <p>{p.data.description}</p>
+                  <p class="protocol-authors">{p.data.authors}</p>
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
+      </section>
+    </div>
+
+    <section class="block failed" aria-labelledby="not-everything-works">
+      <div>
+        <h2 id="not-everything-works">Not everything works</h2>
+        <p>
+          {failedCount > 0 ? `${failedCount} projects` : 'Some projects'} did not work, among them three attempts at rapid
+          lysis of <em>M. tuberculosis</em>. They are listed with the rest of the record.
+        </p>
+      </div>
+      <ButtonLink href="/did-not-work/" variant="ghost">What did not work</ButtonLink>
+    </section>
+  </div>
+</Base>
+
+<style>
+  .block {
+    margin-bottom: var(--s-8);
+  }
+  .block :global(.section-label) {
+    margin-bottom: var(--s-5);
+  }
+  .grid-12 :global(.section-label) {
+    margin-bottom: var(--s-5);
+  }
+  h4.label {
+    margin: 0 0 var(--s-2);
+  }
+
+  /* Themes */
+  .themes {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .theme {
+    display: grid;
+    gap: var(--s-5);
+    padding-block: var(--s-6);
+    border-top: var(--hair);
+    scroll-margin-top: calc(var(--nav-h) + var(--s-4));
+  }
+  .theme:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+  @media (min-width: 960px) {
+    .theme {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      gap: var(--s-7);
+    }
+  }
+  .theme-no {
+    margin-bottom: var(--s-2);
+    color: var(--accent-text);
+  }
+  .theme h3 {
+    font-size: var(--fs-lg);
+    line-height: var(--lh-snug);
+    margin-bottom: var(--s-3);
+  }
+  .theme-text {
+    max-width: var(--measure);
+  }
+  .theme-refs {
+    display: grid;
+    gap: var(--s-5);
+    align-content: start;
+  }
+  .ref-projects,
+  .ref-pubs {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--fs-sm);
+    line-height: var(--lh-snug);
+  }
+  .ref-projects {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+  }
+  .ref-projects li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-2);
+  }
+  .ref-pubs li {
+    padding-block: var(--s-2);
+    border-top: var(--hair);
+  }
+  .ref-pubs li:last-child {
+    border-bottom: var(--hair);
+  }
+  .ref-pubs a,
+  .ref-pubs li > span:first-child {
+    color: var(--text);
+  }
+  .ref-meta {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .ref-pubs .ref-meta {
+    display: block;
+    margin-top: var(--s-1);
+    white-space: normal;
+  }
+  .more {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+    margin-top: var(--s-5);
+    padding-top: var(--s-4);
+    border-top: var(--hair);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+  }
+
+  /* Patent */
+  .patents {
+    display: grid;
+    gap: var(--s-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .patent {
+    display: grid;
+    gap: var(--s-2);
+    padding: var(--s-5);
+    background: var(--surface);
+    border: var(--hair);
+    border-radius: var(--radius);
+  }
+  .patent-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-2) var(--s-4);
+    font-size: var(--fs-xs);
+    color: var(--muted);
+  }
+  .patent h3 {
+    font-size: var(--fs-md);
+    line-height: var(--lh-snug);
+  }
+  .patent-inventors,
+  .patent-detail {
+    font-size: var(--fs-sm);
+    line-height: 1.55;
+  }
+  .patent-detail {
+    color: var(--muted);
+  }
+  .patent-link {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+  }
+
+  /* Protocols */
+  .aside-link {
+    color: var(--accent-text);
+  }
+  .protocols {
+    margin: 0;
+  }
+  .protocol {
+    display: grid;
+    gap: var(--s-1) var(--s-5);
+    padding-block: var(--s-3);
+    border-top: var(--hair);
+  }
+  .protocol:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+  @media (min-width: 640px) {
+    .protocol {
+      grid-template-columns: 10rem minmax(0, 1fr);
+    }
+  }
+  .protocol dt {
+    font-size: var(--fs-sm);
+    line-height: 1.7;
+  }
+  .protocol dd {
+    margin: 0;
+    font-size: var(--fs-sm);
+    line-height: 1.55;
+  }
+  .protocol-authors {
+    margin-top: var(--s-1);
+    color: var(--muted);
+  }
+
+  /* Pointer to /did-not-work/ */
+  .failed {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4) var(--s-6);
+    padding: var(--s-5);
+    background: var(--surface);
+    border: var(--hair);
+    border-radius: var(--radius);
+  }
+  .failed h2 {
+    font-size: var(--fs-lg);
+    margin-bottom: var(--s-2);
+  }
+  .failed p {
+    max-width: var(--measure);
+    color: var(--muted);
+  }
+</style>

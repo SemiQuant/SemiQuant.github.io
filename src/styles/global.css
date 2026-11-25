@@ -138,13 +138,8 @@ pre {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
-  border-radius: var(--radius);
-}
-
-:root[data-theme='light'] :focus-visible {
-  outline-color: var(--accent-text);
 }
 
 /* Skip link: off screen until it takes focus. */
@@ -297,9 +292,46 @@ pre {
   }
 }
 
+/*
+ * Print: browsers drop backgrounds, so the dark tokens would print as pale
+ * text on white. Swap them for ink-on-paper values. Plain :root on purpose:
+ * it overrides the dark defaults, leaves the light theme's own tokens alone
+ * (already dark on light) and stays below cv-print.css, which sets its own.
+ */
 @media print {
+  :root {
+    color-scheme: light;
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-2: #ffffff;
+    --text: #000000;
+    --muted: #333333;
+    --faint: #555555;
+    --border: #bbbbbb;
+    --border-strong: #666666;
+    --accent-text: #7a3600;
+    --accent-stroke: #c96a00;
+    --accent-soft: transparent;
+    --ok: #1c7a4d;
+    --warn: #8a6100;
+    --idle: #555555;
+    --grid: rgb(0 0 0 / 0.08);
+    --grid-strong: rgb(0 0 0 / 0.18);
+    --tick: #bbbbbb;
+  }
+
   body {
-    background: #fff;
-    color: #000;
+    background: #ffffff;
+    color: var(--text);
+  }
+
+  /* Controls and navigation have no use on paper. */
+  .skip-link,
+  .site-nav,
+  .menu-btn,
+  .theme-toggle,
+  .filters,
+  .site-footer .col + .col {
+    display: none !important;
   }
 }

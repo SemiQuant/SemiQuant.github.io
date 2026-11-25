@@ -38,8 +38,12 @@ const Tag = href ? 'a' : 'span';
     border-color: transparent;
     color: var(--accent-text);
   }
+  /* Linked chips are controls: a 3:1 boundary. Static chips keep the hairline. */
+  a.chip:not(.accent) {
+    border-color: var(--border-strong);
+  }
   a.chip:hover {
     color: var(--text);
-    border-color: var(--border-strong);
+    border-color: var(--text);
   }
 </style>

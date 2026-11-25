@@ -18,47 +18,75 @@ const { class: className, labels = true } = Astro.props;
 
 const W = 640;
 const H = 400;
-const M = { l: 44, r: 12, t: 14, b: 30 };
+const M = { l: 52, r: 12, t: 14, b: 36 };
 const PW = W - M.l - M.r;
 const PH = H - M.t - M.b;
 const CYCLES = 40;
 const LOG_MIN = -3;
 const LOG_MAX = 1;
 const THRESHOLD = 0.1;
-const K = 0.66; // per-cycle growth rate in the exponential phase (ln 2 would be perfect doubling)
 
 const r1 = (n: number) => Math.round(n * 10) / 10;
 const x = (cycle: number) => M.l + (cycle / CYCLES) * PW;
 const y = (v: number) => M.t + ((LOG_MAX - Math.log10(v)) / (LOG_MAX - LOG_MIN)) * PH;
 
-/** Small deterministic baseline ripple so early cycles do not look ruled. */
-const ripple = (c: number, seed: number) =>
-  1 + 0.05 * Math.sin(c * 1.9 + seed * 2.3) + 0.03 * Math.sin(c * 0.73 + seed * 5.1) + 0.025 * Math.sin(c * 3.7 + seed);
+/** Seeded generator (mulberry32): the same plot on every build. */
+const mulberry32 = (seed: number) => () => {
+  seed = (seed + 0x6d2b79f5) | 0;
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
 
-type Curve = { mid: number; plateau: number; base: number; seed: number; hi?: boolean };
+/**
+ * Baseline noise: one random reading per cycle (a damped walk, so readings
+ * drift a little rather than jump), read between cycles by interpolation.
+ * Returns a multiplier around 1.
+ */
+const noise = (seed: number, amp: number) => {
+  const rand = mulberry32(seed);
+  const steps: number[] = [];
+  let v = 0;
+  for (let i = 0; i <= CYCLES; i++) {
+    v = v * 0.45 + (rand() * 2 - 1);
+    steps.push(v);
+  }
+  return (cycle: number) => {
+    const i = Math.min(CYCLES - 1, Math.floor(cycle));
+    const f = cycle - i;
+    return Math.exp(amp * (steps[i] * (1 - f) + steps[i + 1] * f));
+  };
+};
+
+// k is the per-cycle growth rate in the exponential phase (ln 2 would be perfect doubling).
+// Real wells differ a little in efficiency, spacing and plateau, so each curve has its own.
+type Curve = { mid: number; plateau: number; base: number; k: number; seed: number; hi?: boolean };
 const series: Curve[] = [
-  { mid: 19.0, plateau: 4.6, base: 0.0042, seed: 1 },
-  { mid: 22.4, plateau: 4.2, base: 0.0036, seed: 2 },
-  { mid: 25.7, plateau: 3.9, base: 0.0045, seed: 3, hi: true },
-  { mid: 29.1, plateau: 3.4, base: 0.0039, seed: 4 },
-  { mid: 32.3, plateau: 2.9, base: 0.0034, seed: 5 },
+  { mid: 18.8, plateau: 4.7, base: 0.0042, k: 0.67, seed: 11 },
+  { mid: 22.5, plateau: 4.1, base: 0.0036, k: 0.65, seed: 23 },
+  { mid: 25.7, plateau: 3.9, base: 0.0045, k: 0.66, seed: 37, hi: true },
+  { mid: 29.3, plateau: 3.3, base: 0.0039, k: 0.63, seed: 41 },
+  { mid: 32.2, plateau: 2.7, base: 0.0034, k: 0.62, seed: 59 },
 ];
 
-const value = (c: Curve, cycle: number) => c.base * ripple(cycle, c.seed) + c.plateau / (1 + Math.exp(-K * (cycle - c.mid)));
+const value = (c: Curve, wobble: (cycle: number) => number, cycle: number) =>
+  c.base * wobble(cycle) + c.plateau / (1 + Math.exp(-c.k * (cycle - c.mid)));
 const pathFor = (fn: (cycle: number) => number) => {
   let d = '';
   for (let i = 0; i <= CYCLES * 4; i++) {
     const cyc = i / 4;
-    d += `${i === 0 ? 'M' : 'L'}${r1(x(cyc))} ${r1(y(fn(cyc)))}`;
+    d += `${i === 0 ? 'M' : 'L'}${r1(x(cyc))} ${r1(y(Math.max(fn(cyc), 10 ** LOG_MIN)))}`;
   }
   return d;
 };
 
 const curves = series.map((c) => {
-  const ct = c.mid - Math.log(c.plateau / (THRESHOLD - c.base) - 1) / K;
-  return { ...c, ct, d: pathFor((cyc) => value(c, cyc)) };
+  const ct = c.mid - Math.log(c.plateau / (THRESHOLD - c.base) - 1) / c.k;
+  const wobble = noise(c.seed, 0.16);
+  return { ...c, ct, d: pathFor((cyc) => value(c, wobble, cyc)) };
 });
-const ntc = pathFor((cyc) => 0.0031 * ripple(cyc, 9));
+const ntcNoise = noise(97, 0.2);
+const ntc = pathFor((cyc) => 0.0031 * ntcNoise(cyc));
 const hi = curves.find((c) => c.hi)!;
 
 const decades = [-3, -2, -1, 0, 1];
@@ -66,9 +94,13 @@ const minor = decades.slice(0, -1).flatMap((dec) => [2, 3, 4, 5, 6, 7, 8, 9].map
 const xTicks = [0, 5, 10, 15, 20, 25, 30, 35, 40];
 const yLabel = (dec: number) => (dec < 0 ? (10 ** dec).toFixed(-dec) : String(10 ** dec));
 const ty = y(THRESHOLD);
+
+// Without labels the axis margins are dead space: these ratios scale the SVG so
+// the plot area itself spans the container and lines up with the text column.
+const bleed = `--qw:${(W / PW).toFixed(4)};--ql:${(M.l / PW).toFixed(4)};--qb:${((M.b - 1) / PW).toFixed(4)}`;
 ---
 
-<div class:list={['qpcr-wrap', className]}>
+<div class:list={['qpcr-wrap', { 'no-labels': !labels }, className]} style={bleed}>
 <svg
   class="qpcr"
   viewBox={`0 0 ${W} ${H}`}
@@ -97,19 +129,19 @@ const ty = y(THRESHOLD);
         {xTicks
           .filter((c) => c % 10 === 0)
           .map((c) => (
-            <text x={r1(x(c))} y={H - M.b + 17} text-anchor="middle">
+            <text x={r1(x(c))} y={H - M.b + 18} text-anchor="middle">
               {c}
             </text>
           ))}
         {decades.map((dec) => (
-          <text x={M.l - 8} y={r1(y(10 ** dec)) + 3.5} text-anchor="end">
+          <text x={M.l - 8} y={r1(y(10 ** dec)) + 4.5} text-anchor="end">
             {yLabel(dec)}
           </text>
         ))}
         <text class="cap" x={W - M.r} y={H - 2} text-anchor="end">
           CYCLE
         </text>
-        <text class="cap" x={M.l + 8} y={M.t + 14}>
+        <text class="cap" x={M.l + 8} y={M.t + 16}>
           {'Δ'}Rn (LOG)
         </text>
       </g>
@@ -138,7 +170,7 @@ const ty = y(THRESHOLD);
     <circle class="ct-hi" cx={r1(x(hi.ct))} cy={r1(ty)} r="3.5" />
     {
       labels && (
-        <text class="ct-label" x={r1(x(hi.ct)) + 9} y={H - M.b - 9}>
+        <text class="ct-label" x={r1(x(hi.ct)) + 9} y={H - M.b - 10}>
           Ct {hi.ct.toFixed(1)}
         </text>
       )
@@ -177,12 +209,12 @@ const ty = y(THRESHOLD);
   }
   text {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: 13px;
     font-variant-numeric: tabular-nums;
     fill: var(--faint);
   }
   .cap {
-    font-size: 9px;
+    font-size: 12px;
     letter-spacing: 0.1em;
   }
   .curves path {
@@ -197,16 +229,15 @@ const ty = y(THRESHOLD);
     opacity: 0.7;
   }
   .curve-hi {
-    stroke: var(--accent);
+    stroke: var(--accent-stroke);
     stroke-width: 2.25;
     stroke-linejoin: round;
     stroke-linecap: round;
   }
   .threshold line {
-    stroke: var(--accent);
+    stroke: var(--accent-stroke);
     stroke-width: 1;
     stroke-dasharray: 5 4;
-    opacity: 0.8;
   }
   .threshold text {
     fill: var(--accent-text);
@@ -217,26 +248,44 @@ const ty = y(THRESHOLD);
     stroke-width: 1;
   }
   .ct-drop {
-    stroke: var(--accent);
+    stroke: var(--accent-stroke);
     stroke-width: 1;
     stroke-dasharray: 2 3;
   }
   .ct-hi {
-    fill: var(--accent);
+    fill: var(--accent-stroke);
     stroke: var(--bg);
     stroke-width: 2;
   }
   .ct-label {
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 600;
     fill: var(--accent-text);
   }
 
-  /* Narrow renders: axis numbers would be unreadably small, so keep only the Ct readout, larger. */
+  /* labels={false}: no axis text, plot area flush with the container. */
+  .no-labels .axis line {
+    display: none;
+  }
+  .no-labels .qpcr {
+    width: calc(100% * var(--qw));
+    max-width: none;
+    margin-left: calc(-100% * var(--ql));
+    margin-bottom: calc(-100% * var(--qb));
+  }
+
+  /* Narrow renders: axis numbers would be unreadably small, so keep only the Ct readout, larger, and pull the plot flush. */
   @container (max-width: 30rem) {
     .labels,
-    .threshold text {
+    .threshold text,
+    .axis line {
       display: none;
+    }
+    .qpcr {
+      width: calc(100% * var(--qw));
+      max-width: none;
+      margin-left: calc(-100% * var(--ql));
+      margin-bottom: calc(-100% * var(--qb));
     }
     .ct-label {
       font-size: 19px;

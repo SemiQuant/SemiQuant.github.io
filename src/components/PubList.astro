@@ -6,11 +6,14 @@
  *   <PubList pubs={pubs} filterable />
  * Subset that keeps the ids of the full list:
  *   <PubList pubs={featured} numbers={pubNumbers(pubs)} />
- * Without `numbers`, ids count down from pubs.length (newest = highest).
+ * Without `numbers`, ids count down from the number of CV entries passed in
+ * (newest = highest). Entries with inCv false never get an id.
  * Without JavaScript the filter bar is hidden and the full list shows.
+ * The filter bar reads ?q=, ?type=, ?year= and ?role=lead from the URL and
+ * keeps the URL in step, so filtered views can be linked and reloaded.
  */
 import type { CollectionEntry } from 'astro:content';
-import { pubTypeLabel, sortPubs } from '../lib/format';
+import { pubNumbers, pubTypeLabel, sortPubs } from '../lib/format';
 import PubRow from './PubRow.astro';
 
 interface Props {
@@ -28,7 +31,9 @@ interface Props {
 const { pubs, filterable = false, showIds = true, numbers, legend = true } = Astro.props;
 const sorted = sortPubs(pubs);
 const total = sorted.length;
-const numberOf = (id: string, i: number) => numbers?.get(id) ?? total - i;
+// Extras (inCv false) are missing from the map and render without an id.
+const ids = numbers ?? pubNumbers(sorted);
+const numberOf = (id: string) => ids.get(id);
 
 const types = ['article', 'preprint', 'chapter', 'software'].filter((t) => sorted.some((p) => p.data.type === t));
 const years = [...new Set(sorted.map((p) => p.data.year))].sort((a, b) => b - a);
@@ -88,7 +93,7 @@ const hasJoint = sorted.some((p) => p.data.role === 'joint-first' || p.data.auth
   {
     total > 0 && (
       <p class="status-line">
-        <span data-pub-count aria-live="polite">
+        <span data-pub-count aria-live={filterable ? 'polite' : undefined}>
           {filterable ? `Showing ${total} of ${total}` : `${total} ${total === 1 ? 'entry' : 'entries'}`}
         </span>
         {legend && hasJoint && <span class="legend">* joint first author</span>}
@@ -97,7 +102,7 @@ const hasJoint = sorted.some((p) => p.data.role === 'joint-first' || p.data.auth
   }
 
   <ol class="rows" reversed={showIds ? true : undefined}>
-    {sorted.map((pub, i) => <PubRow pub={pub} n={numberOf(pub.id, i)} showId={showIds} />)}
+    {sorted.map((pub, i) => <PubRow pub={pub} n={numberOf(pub.id)} showId={showIds} />)}
   </ol>
 
   {total === 0 && <p class="empty">No publications to show yet.</p>}
@@ -169,7 +174,7 @@ const hasJoint = sorted.some((p) => p.data.role === 'joint-first' || p.data.auth
     font-weight: 600;
   }
   .seg input:focus-visible + span {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--focus);
     outline-offset: 2px;
   }
   .field {
@@ -267,9 +272,14 @@ const hasJoint = sorted.some((p) => p.data.role === 'joint-first' || p.data.auth
 </style>
 
 <script>
+  const KEYS = ['q', 'type', 'year', 'role'] as const;
+  let urlOwner: HTMLFormElement | null = null; // the first filter bar on the page owns the query string
+
   document.querySelectorAll<HTMLElement>('[data-pub-list]').forEach((root) => {
     const form = root.querySelector<HTMLFormElement>('[data-pub-filters]');
     if (!form) return;
+    urlOwner ??= form;
+    const syncUrl = urlOwner === form;
     const rows = Array.from(root.querySelectorAll<HTMLElement>('[data-pub]'));
     const count = root.querySelector<HTMLElement>('[data-pub-count]');
     const empty = root.querySelector<HTMLElement>('[data-pub-empty]');
@@ -293,14 +303,53 @@ const hasJoint = sorted.some((p) => p.data.role === 'joint-first' || p.data.auth
         row.hidden = !ok;
         if (ok) shown++;
       }
-      if (count) count.textContent = `Showing ${shown} of ${rows.length}`;
       if (empty) empty.hidden = shown > 0;
+
+      // The count is a live region: write it only when it changes, and wait for typing to pause.
+      const text = `Showing ${shown} of ${rows.length}`;
+      clearTimeout(countTimer);
+      countTimer = window.setTimeout(
+        () => {
+          if (count && count.textContent?.trim() !== text) count.textContent = text;
+        },
+        announce ? 300 : 0,
+      );
+
+      if (syncUrl && announce) {
+        const url = new URL(location.href);
+        for (const k of KEYS) {
+          const v = String(fd.get(k) ?? '').trim();
+          if (v && v !== 'all') url.searchParams.set(k, v);
+          else url.searchParams.delete(k);
+        }
+        try {
+          history.replaceState(history.state, '', url);
+        } catch {
+          /* file: pages and sandboxed frames cannot rewrite the URL */
+        }
+      }
     };
+
+    let countTimer: number | undefined;
+    let announce = false;
+
+    // Restore filters from the query string (linked chips, reload, back navigation).
+    if (syncUrl) {
+      const params = new URLSearchParams(location.search);
+      for (const k of KEYS) {
+        const v = params.get(k);
+        const el = form.elements.namedItem(k);
+        if (!v || !el) continue;
+        if (el instanceof HTMLSelectElement && !Array.from(el.options).some((o) => o.value === v)) continue;
+        (el as HTMLInputElement | HTMLSelectElement | RadioNodeList).value = v;
+      }
+    }
 
     form.addEventListener('input', apply);
     form.addEventListener('change', apply);
     form.addEventListener('submit', (e) => e.preventDefault());
     form.addEventListener('reset', () => setTimeout(apply));
     apply();
+    announce = true;
   });
 </script>

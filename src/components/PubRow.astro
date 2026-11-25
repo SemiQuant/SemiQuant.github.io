@@ -6,15 +6,18 @@
  * n is the sample number: with showId it prints as "P-036".
  * Title *asterisks* become italics; everything else is escaped.
  * The site owner is emphasized in the author list. Joint first authors are
- * marked with an asterisk: with role "joint-first", every author up to and
- * including the owner, plus any author whose name ends in "*" in the data.
+ * marked with an asterisk. If any author name ends in "*" in the data, those
+ * authors and the owner are marked and nobody else. Otherwise, with role
+ * "joint-first", every author up to and including the owner is marked.
+ * n is optional: entries without a number (extras not in the CV) keep the
+ * id column empty.
  */
 import type { CollectionEntry } from 'astro:content';
 import { doiUrl, escapeHtml, isOwner, mdInlineToHtml, mdInlineToText, pmidUrl, pubLabel, pubTypeLabel } from '../lib/format';
 
 interface Props {
   pub: CollectionEntry<'publications'>;
-  n: number;
+  n?: number;
   /** Show the P-000 id column. Default true. */
   showId?: boolean;
 }
@@ -22,14 +25,17 @@ interface Props {
 const { pub, n, showId = true } = Astro.props;
 const d = pub.data;
 
-// Joint first authors lead the list, so with role "joint-first" everyone up to
-// and including the owner shares first authorship.
+// Explicit asterisks in the data are the source of truth. Without any, joint
+// first authors lead the list, so with role "joint-first" everyone up to and
+// including the owner shares first authorship.
 const ownerIndex = d.authors.findIndex((a) => isOwner(a));
+const explicit = d.authors.some((a) => /\*\s*$/.test(a));
 const authors = d.authors.map((raw, i) => {
   const marked = /\*\s*$/.test(raw);
   const name = raw.replace(/\*\s*$/, '').trim();
   const owner = isOwner(name);
-  return { name, owner, joint: marked || (d.role === 'joint-first' && ownerIndex >= 0 && i <= ownerIndex) };
+  const lead = d.role === 'joint-first' && ownerIndex >= 0 && (explicit ? owner : i <= ownerIndex);
+  return { name, owner, joint: marked || lead };
 });
 
 const authorsHtml = authors
@@ -53,7 +59,7 @@ const searchText = [mdInlineToText(d.title), d.authors.join(' '), d.journal ?? '
   data-year={d.year}
   data-text={searchText}
 >
-  {showId && <span class="id">{pubLabel(n)}</span>}
+  {showId && <span class="id">{typeof n === 'number' && n > 0 ? pubLabel(n) : ''}</span>}
   <div class="main">
     <p class="title">
       <span set:html={mdInlineToHtml(d.title)} />
@@ -178,11 +184,15 @@ const searchText = [mdInlineToText(d.title), d.authors.join(' '), d.journal ?? '
     line-height: 1.6;
     font-variant-numeric: tabular-nums;
   }
+  /* Muted at rest: orange on every row would outweigh the titles. */
   .ids a {
+    color: var(--muted);
     text-decoration: none;
     overflow-wrap: anywhere;
   }
-  .ids a:hover {
+  .ids a:hover,
+  .ids a:focus-visible {
+    color: var(--accent-text);
     text-decoration: underline;
   }
   .k {

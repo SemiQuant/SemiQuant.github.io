@@ -1,0 +1,257 @@
+---
+/**
+ * /software/: methods, devices, web apps, tools and pipelines from the
+ * `projects` collection (games, side projects and failed experiments live
+ * on their own pages). Cards link to /software/<slug>/ only when the
+ * project has detail: true. The kind filter is progressive: without
+ * JavaScript the bar is hidden and every card shows.
+ */
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import SectionLabel from '../../components/SectionLabel.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { breadcrumbJsonLd, softwareJsonLd, absoluteUrl } from '../../components/seo/jsonld';
+
+type Kind = 'method' | 'hardware' | 'webapp' | 'tool' | 'pipeline';
+
+const byOrder = <T extends { id: string; data: { order: number; title: string } }>(a: T, b: T) =>
+  a.data.order - b.data.order || a.data.title.localeCompare(b.data.title);
+
+const all = (await getCollection('projects')).sort(byOrder);
+
+const groups = [
+  { id: 'methods', label: 'Methods and devices', kinds: ['method', 'hardware'] },
+  { id: 'web-apps', label: 'Web apps', kinds: ['webapp'] },
+  { id: 'tools', label: 'Tools and pipelines', kinds: ['tool', 'pipeline'] },
+]
+  .map((g) => ({ ...g, items: all.filter((p) => g.kinds.includes(p.data.kind)) }))
+  .filter((g) => g.items.length > 0);
+
+const shown = groups.flatMap((g) => g.items);
+
+const filterDefs: { kind: Kind; label: string }[] = [
+  { kind: 'method', label: 'Methods' },
+  { kind: 'hardware', label: 'Devices' },
+  { kind: 'webapp', label: 'Web apps' },
+  { kind: 'tool', label: 'Tools' },
+  { kind: 'pipeline', label: 'Pipelines' },
+];
+const filters = filterDefs
+  .map((f) => ({ ...f, count: shown.filter((p) => p.data.kind === f.kind).length }))
+  .filter((f) => f.count > 0);
+
+const drdx = all.find((p) => p.id === 'drdx');
+const count = (n: number) => `${n} ${n === 1 ? 'entry' : 'entries'}`;
+
+const title = 'Methods and software';
+const description =
+  'Laboratory methods, a lysis device, web apps, command line tools and pipelines by Jason Limberis, for PCR, amplicon sequencing and tuberculosis diagnostics.';
+
+const jsonLd = [
+  breadcrumbJsonLd([
+    { name: 'Home', href: '/' },
+    { name: 'Methods & software', href: '/software/' },
+  ]),
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: title,
+    url: absoluteUrl('/software/'),
+    numberOfItems: shown.length,
+    itemListElement: shown.map((p, i) => {
+      const { '@context': _context, ...item } = softwareJsonLd(p);
+      return { '@type': 'ListItem', position: i + 1, item };
+    }),
+  },
+];
+---
+
+<Base title={title} description={description} jsonLd={jsonLd}>
+  <PageHeader
+    index="02"
+    label="Methods & software"
+    title={title}
+    lede="Laboratory methods, one lysis device, and the software that goes with them. The larger projects have their own page here. The rest link straight to the code or the app."
+  />
+
+  <div class="wrap">
+    <div class="filter" data-kind-filter role="group" aria-label="Filter by kind">
+      <span class="label">Show</span>
+      <div class="filter-buttons">
+        <button type="button" data-kind="all" aria-pressed="true">
+          All <span class="n">{shown.length}</span>
+        </button>
+        {
+          filters.map((f) => (
+            <button type="button" data-kind={f.kind} aria-pressed="false">
+              {f.label} <span class="n">{f.count}</span>
+            </button>
+          ))
+        }
+      </div>
+    </div>
+    <p class="visually-hidden" data-kind-status aria-live="polite"></p>
+
+    {
+      groups.map((g) => (
+        <section class="group" data-group aria-labelledby={g.id}>
+          <SectionLabel label={g.label} id={g.id}>
+            <span slot="aside" data-group-count>
+              {count(g.items.length)}
+            </span>
+          </SectionLabel>
+          {g.id === 'web-apps' && drdx?.data.links.web && (
+            <p class="note" data-note-kind="webapp">
+              <a href={drdx.data.links.web} rel="noopener">
+                DrDx.Me
+              </a>{' '}
+              is the home of the browser versions. It hosts the web versions of primerJinn, URAdime, spotPCR, stilPCR,
+              the hissPCR primer designer and CountFU, next to pipelines for nanopore UMI data, whole-genome sequencing
+              and RNA-seq, and a set of lab calculators.
+            </p>
+          )}
+          <ul class="cards">
+            {g.items.map((p) => (
+              <li data-card data-kind={p.data.kind}>
+                <ProjectCard project={p} href={p.data.detail ? `/software/${p.id}/` : undefined} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+
+    <section class="group more" aria-labelledby="elsewhere">
+      <SectionLabel label="Elsewhere on this site" id="elsewhere" />
+      <ul class="pointers">
+        <li>
+          <a href="/builds/">Builds</a>
+          <span>Lab hardware I designed and built for the bench.</span>
+        </li>
+        <li>
+          <a href="/side-projects/">Side projects</a>
+          <span>Games and other things made outside the lab.</span>
+        </li>
+      </ul>
+    </section>
+  </div>
+</Base>
+
+<script>
+  const bar = document.querySelector<HTMLElement>('[data-kind-filter]');
+  if (bar) {
+    const buttons = Array.from(bar.querySelectorAll<HTMLButtonElement>('button[data-kind]'));
+    const groups = Array.from(document.querySelectorAll<HTMLElement>('[data-group]'));
+    const status = document.querySelector<HTMLElement>('[data-kind-status]');
+    const entries = (n: number) => `${n} ${n === 1 ? 'entry' : 'entries'}`;
+
+    const apply = (kind: string, announce: boolean) => {
+      let total = 0;
+      for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.kind === kind));
+      for (const group of groups) {
+        let n = 0;
+        group.querySelectorAll<HTMLElement>('[data-card]').forEach((card) => {
+          const ok = kind === 'all' || card.dataset.kind === kind;
+          card.hidden = !ok;
+          if (ok) n++;
+        });
+        group.querySelectorAll<HTMLElement>('[data-note-kind]').forEach((note) => {
+          note.hidden = !(kind === 'all' || note.dataset.noteKind === kind);
+        });
+        group.hidden = n === 0;
+        const out = group.querySelector<HTMLElement>('[data-group-count]');
+        if (out) out.textContent = entries(n);
+        total += n;
+      }
+      if (status && announce) status.textContent = `Showing ${entries(total)}`;
+    };
+
+    for (const b of buttons) b.addEventListener('click', () => apply(b.dataset.kind ?? 'all', true));
+  }
+</script>
+
+<style>
+  .filter {
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3) var(--s-4);
+    margin-bottom: var(--s-7);
+  }
+  :global(.js) .filter {
+    display: flex;
+  }
+  .filter-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    min-height: 2.25rem;
+    padding: 0 var(--s-3);
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      background-color var(--dur),
+      border-color var(--dur),
+      color var(--dur);
+  }
+  button:hover {
+    color: var(--text);
+    border-color: var(--text);
+  }
+  button[aria-pressed='true'] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+  .n {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.75;
+  }
+  .group {
+    margin-bottom: var(--s-8);
+  }
+  .group[hidden],
+  .cards > li[hidden] {
+    display: none;
+  }
+  .note {
+    max-width: var(--measure);
+    margin-bottom: var(--s-5);
+    font-size: var(--fs-sm);
+    line-height: 1.55;
+    color: var(--muted);
+  }
+  .pointers {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+    gap: var(--s-4) var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .pointers li {
+    display: grid;
+    gap: var(--s-1);
+  }
+  .pointers a {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+  }
+  .pointers span {
+    font-size: var(--fs-sm);
+    color: var(--muted);
+  }
+</style>

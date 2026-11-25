@@ -59,6 +59,12 @@ const { stats, stamp, label = 'Key figures' } = Astro.props;
       grid-template-columns: repeat(var(--c-lg), minmax(0, 1fr));
     }
   }
+  /* Two columns on phones: an odd last cell takes the full row instead of leaving a gap. */
+  @media (max-width: 639.98px) {
+    .cell:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
+  }
   .cell {
     display: flex;
     flex-direction: column-reverse;

@@ -1,31 +1,45 @@
 ---
 /**
- * YouTube facade. Shows a thumbnail (from i.ytimg.com) that links to the
- * video; on click it is replaced by the www.youtube-nocookie.com player, so
- * nothing loads from YouTube's player until the visitor asks for it.
+ * YouTube facade. Shows a thumbnail that links to the video; on click it is
+ * replaced by the www.youtube-nocookie.com player, so nothing loads from
+ * YouTube's player until the visitor asks for it.
  * Without JavaScript the link opens the video on YouTube.
  * Usage: <LiteYouTube id="VIDEO_ID" title="What the video shows" />
+ * Pass poster (a local image import) to keep the thumbnail on this site:
+ *   <LiteYouTube id="VIDEO_ID" title="..." poster={thumb} />
+ * Without poster the thumbnail comes from i.ytimg.com when it scrolls into view.
  */
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+
 interface Props {
   id: string;
   title: string;
+  /** Local thumbnail. Preferred: no request goes to a Google host before the click. */
+  poster?: ImageMetadata;
 }
 
-const { id, title } = Astro.props;
+const { id, title, poster } = Astro.props;
 const safeId = encodeURIComponent(id);
 ---
 
 <figure class="yt">
   <a class="frame" href={`https://www.youtube.com/watch?v=${safeId}`} rel="noopener" data-yt={safeId} data-title={title}>
-    <img
-      src={`https://i.ytimg.com/vi/${safeId}/hqdefault.jpg`}
-      alt=""
-      width="480"
-      height="360"
-      loading="lazy"
-      decoding="async"
-      referrerpolicy="no-referrer"
-    />
+    {
+      poster ? (
+        <Image src={poster} alt="" width={640} height={360} fit="cover" loading="lazy" />
+      ) : (
+        <img
+          src={`https://i.ytimg.com/vi/${safeId}/hqdefault.jpg`}
+          alt=""
+          width="480"
+          height="360"
+          loading="lazy"
+          decoding="async"
+          referrerpolicy="no-referrer"
+        />
+      )
+    }
     <span class="play" aria-hidden="true">
       <svg viewBox="0 0 16 16" width="16" height="16"><path d="M4 2.5v11l9-5.5z" fill="currentColor"></path></svg>
     </span>
@@ -41,7 +55,8 @@ const safeId = encodeURIComponent(id);
   .yt {
     margin: 0;
   }
-  .frame {
+  /* .frame, img and iframe are global inside .yt: the script swaps the link for a new node. */
+  .yt :global(.frame) {
     position: relative;
     display: block;
     aspect-ratio: 16 / 9;
@@ -50,20 +65,20 @@ const safeId = encodeURIComponent(id);
     border: var(--hair);
     border-radius: var(--radius);
   }
-  .frame img,
-  .frame :global(iframe) {
+  .yt :global(.frame img),
+  .yt :global(.frame iframe) {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     border: 0;
   }
-  .frame img {
+  .yt :global(.frame img) {
     object-fit: cover;
     opacity: 0.85;
     transition: opacity var(--dur);
   }
-  .frame:hover img {
+  .yt :global(.frame:hover img) {
     opacity: 1;
   }
   .play {

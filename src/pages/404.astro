@@ -1,0 +1,98 @@
+---
+/** Not-found page. Astro emits it as /404.html, which GitHub Pages serves for unknown paths. */
+import Base from '../layouts/Base.astro';
+import ButtonLink from '../components/ButtonLink.astro';
+import { nav } from '../data/profile';
+---
+
+<Base title="Page not found" description="There is no page at this address on semiquant.com." noindex>
+  <script is:inline slot="head">
+    (function () {
+      var t = new URLSearchParams(location.search).get('theme');
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    })();
+  </script>
+
+  <div class="wrap nf">
+    <p class="label"><span class="idx">Status</span> <span class="sep" aria-hidden="true">/</span> Not found</p>
+    <p class="readout mono" aria-hidden="true">404</p>
+    <h1>Page not found</h1>
+    <p class="lede">There is nothing at this address. The page may have moved, or the link may be wrong.</p>
+    <div class="cluster">
+      <ButtonLink href="/">Go to the home page</ButtonLink>
+    </div>
+
+    <nav class="sections" aria-label="Main sections">
+      <p class="label">Sections</p>
+      <ul>
+        {
+          nav.map((item, i) => (
+            <li>
+              <a href={item.href}>
+                <span class="n">{String(i + 1).padStart(2, '0')}</span>
+                <span>{item.label}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</Base>
+
+<style>
+  .nf {
+    display: grid;
+    justify-items: start;
+    gap: var(--s-4);
+    padding-block: var(--s-8) var(--s-6);
+  }
+  .idx {
+    color: var(--accent-text);
+  }
+  .sep {
+    color: var(--faint);
+  }
+  .readout {
+    font-size: clamp(5rem, 3rem + 14vw, 11rem);
+    font-weight: 500;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    color: var(--text);
+  }
+  h1 {
+    font-size: var(--fs-xl);
+  }
+  .sections {
+    width: 100%;
+    margin-top: var(--s-6);
+    padding-top: var(--s-5);
+    border-top: var(--hair);
+  }
+  .sections ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+    gap: 0 var(--s-5);
+    margin: var(--s-3) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .sections a {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-3);
+    padding-block: var(--s-3);
+    border-bottom: var(--hair);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .sections a:hover {
+    color: var(--accent-text);
+  }
+  .n {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-variant-numeric: tabular-nums;
+    color: var(--faint);
+  }
+</style>

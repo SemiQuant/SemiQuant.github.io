@@ -9,6 +9,8 @@
  * With href the whole card is clickable (the title link is stretched over
  * the card; the external links stay separately clickable above it).
  * For kind "failed" the lesson is shown under the tagline.
+ * Pass cover={false} to leave the cover image out, for grids that mix
+ * projects with and without one and want rows of even height.
  */
 import type { CollectionEntry } from 'astro:content';
 import { Image } from 'astro:assets';
@@ -21,18 +23,21 @@ interface Props {
   href?: string;
   /** Heading level for the title. Default h3. */
   as?: 'h2' | 'h3' | 'h4';
+  /** Show the cover image when the project has one. Default true. */
+  cover?: boolean;
 }
 
-const { project, href, as: Tag = 'h3' } = Astro.props;
+const { project, href, as: Tag = 'h3', cover = true } = Astro.props;
 const d = project.data;
 const stats = (d.stats ?? []).slice(0, 3);
 // Skip a status that only repeats the kind label ("Did not work").
 const status = d.status && d.status.toLowerCase() !== kindLabel(d.kind).toLowerCase() ? d.status : undefined;
+const hasLinks = Object.values(d.links ?? {}).some(Boolean);
 ---
 
 <article class:list={['card', { linked: !!href }]}>
   {
-    d.cover && (
+    cover && d.cover && (
       <div class="cover">
         <Image src={d.cover} alt={d.coverAlt ?? ''} width={640} height={360} fit="cover" loading="lazy" />
       </div>
@@ -67,9 +72,13 @@ const status = d.status && d.status.toLowerCase() !== kindLabel(d.kind).toLowerC
         </dl>
       )
     }
-    <div class="links">
-      <ExternalLinks links={d.links} label={`${d.title} links`} />
-    </div>
+    {
+      hasLinks && (
+        <div class="links">
+          <ExternalLinks links={d.links} label={`${d.title} links`} />
+        </div>
+      )
+    }
   </div>
 </article>
 
@@ -149,7 +158,7 @@ const status = d.status && d.status.toLowerCase() !== kindLabel(d.kind).toLowerC
     outline: none;
   }
   .title a:focus-visible::after {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--focus);
     outline-offset: 2px;
     border-radius: var(--radius);
   }
@@ -207,9 +216,6 @@ const status = d.status && d.status.toLowerCase() !== kindLabel(d.kind).toLowerC
     position: relative;
     z-index: 2;
     margin-top: auto;
-  }
-  .links:empty {
-    display: none;
   }
   .links :global(.ext-links) {
     padding-top: var(--s-2);

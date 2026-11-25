@@ -1,0 +1,366 @@
+---
+/**
+ * /builds/: a workshop log of homemade labware. One section per entry of
+ * the `builds` collection, sorted by `order`. The lead picture is the first
+ * photo wide enough to show large; the rest go to the Gallery lightbox.
+ * Entries with no photos lead with their first YouTube video instead.
+ */
+import { getCollection, getEntry, render } from 'astro:content';
+import { Image, getImage } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import SectionLabel from '../components/SectionLabel.astro';
+import ButtonLink from '../components/ButtonLink.astro';
+import Prose from '../components/Prose.astro';
+import Gallery from '../components/Gallery.astro';
+import LiteYouTube from '../components/LiteYouTube.astro';
+import VideoClip from '../components/VideoClip.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import ThemePreview from '../components/gallery/ThemePreview.astro';
+import { breadcrumbJsonLd } from '../components/seo/jsonld';
+
+const FILES_REPO = 'https://github.com/SemiQuant/homeMadeLabware';
+/** Photos narrower than this are too small to lead a section. */
+const LEAD_MIN_WIDTH = 1000;
+
+const entries = (await getCollection('builds')).sort(
+  (a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title),
+);
+
+const builds = await Promise.all(
+  entries.map(async (entry, i) => {
+    const d = entry.data;
+    const { Content } = await render(entry);
+    const lead = d.images.find((im) => im.src.width >= LEAD_MIN_WIDTH) ?? d.images[0];
+    const leadFull = lead ? await getImage({ src: lead.src, width: Math.min(lead.src.width, 1800) }) : undefined;
+    const leadWidths = lead ? [640, 960, 1280].filter((w) => w <= lead.src.width) : [];
+    // With no photo, the first YouTube video takes the lead slot.
+    const leadVideo = lead ? undefined : d.youtube[0];
+    return {
+      id: entry.id,
+      num: `B-${String(i + 1).padStart(2, '0')}`,
+      d,
+      Content,
+      lead,
+      leadFull,
+      leadWidths,
+      leadVideo,
+      morePhotos: d.images.filter((im) => im !== lead),
+      moreYoutube: d.youtube.filter((v) => v !== leadVideo),
+    };
+  }),
+);
+
+const turbo = await getEntry('projects', 'turbolysis');
+const turboPub = turbo?.data.publications[0] ? await getEntry(turbo.data.publications[0]) : undefined;
+
+const description =
+  'Homemade lab equipment by Jason Limberis: a $30 OD600 spectrophotometer, $5 magnetic bead racks, a bead dispenser, a pH meter and more, with open build files.';
+---
+
+<Base
+  title="Builds"
+  description={description}
+  jsonLd={breadcrumbJsonLd([
+    { name: 'Home', href: '/' },
+    { name: 'Builds', href: '/builds/' },
+  ])}
+>
+  <ThemePreview slot="head" />
+
+  <PageHeader
+    index="04"
+    label="Builds"
+    title="Homemade labware"
+    lede="Custom labware I built when the off-the-shelf option was too expensive or did not exist. The build files are open."
+  >
+    <ButtonLink href={FILES_REPO} variant="ghost" external>Build files on GitHub</ButtonLink>
+  </PageHeader>
+
+  <div class="wrap">
+    <nav class="log-index" aria-labelledby="log-index">
+      <SectionLabel label="Log" id="log-index">
+        <span slot="aside" class="label">{builds.length} builds</span>
+      </SectionLabel>
+      <ol>
+        {
+          builds.map((b) => (
+            <li>
+              <a href={`#${b.id}`}>
+                <span class="num">{b.num}</span>
+                <span class="name">{b.d.title}</span>
+                {b.d.cost && <span class="cost">{b.d.cost}</span>}
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+
+    {
+      builds.map((b) => (
+        <article class="build" id={b.id} aria-labelledby={`${b.id}-title`}>
+          <div class="text">
+            <p class="meta">
+              <span class="num">{b.num}</span>
+              {b.d.cost && (
+                <span class="cost">
+                  <span class="cost-label">Cost</span> {b.d.cost}
+                </span>
+              )}
+            </p>
+            <h2 id={`${b.id}-title`}>{b.d.title}</h2>
+            <p class="tagline">{b.d.tagline}</p>
+            <Prose>
+              <b.Content />
+            </Prose>
+            {(b.d.links.files || b.d.links.repo) && (
+              <div class="cluster links">
+                {b.d.links.files && (
+                  <ButtonLink href={b.d.links.files} variant="ghost" external>
+                    Build files
+                  </ButtonLink>
+                )}
+                {b.d.links.repo && (
+                  <ButtonLink href={b.d.links.repo} variant="ghost" external>
+                    Repo
+                  </ButtonLink>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div class="media">
+            {b.lead && b.leadFull && (
+              <figure class="lead">
+                <a href={b.leadFull.src} aria-label={`Full-size photo: ${b.d.title}`}>
+                  <Image
+                    src={b.lead.src}
+                    alt={b.lead.alt}
+                    width={Math.min(b.lead.src.width, 1280)}
+                    widths={b.leadWidths.length > 0 ? b.leadWidths : undefined}
+                    sizes="(min-width: 960px) 40rem, 100vw"
+                    loading="lazy"
+                  />
+                </a>
+                <figcaption>
+                  <span class="cap-tag" aria-hidden="true">
+                    Photo
+                  </span>
+                  <span>{b.lead.alt}</span>
+                </figcaption>
+              </figure>
+            )}
+            {b.leadVideo && <LiteYouTube id={b.leadVideo.id} title={b.leadVideo.title} />}
+            {b.morePhotos.length > 0 && <Gallery images={b.morePhotos} label={`More photos of ${b.d.title}`} />}
+            {(b.d.videos.length > 0 || b.moreYoutube.length > 0) && (
+              <div class="videos">
+                {b.d.videos.map((v) => (
+                  <VideoClip src={v.src} poster={v.poster} title={v.title} />
+                ))}
+                {b.moreYoutube.map((v) => (
+                  <LiteYouTube id={v.id} title={v.title} />
+                ))}
+              </div>
+            )}
+          </div>
+        </article>
+      ))
+    }
+
+    {
+      turbo && (
+        <section class="paper" aria-labelledby="build-to-paper">
+          <SectionLabel label="From build to paper" id="build-to-paper" />
+          <div class="paper-grid">
+            <p class="paper-note">
+              One device went further than the bench. turboLysis is the build that became a paper
+              {turboPub?.data.journal && ` (${turboPub.data.journal}, ${turboPub.data.year})`}. It has its own page under
+              <a href="/software/">Methods and software</a>.
+            </p>
+            <ProjectCard project={turbo} href="/software/turbolysis/" />
+          </div>
+        </section>
+      )
+    }
+  </div>
+</Base>
+
+<style>
+  /* Log index */
+  .log-index {
+    margin-bottom: var(--s-7);
+  }
+  .log-index ol {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+    column-gap: var(--s-6);
+    margin: var(--s-4) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .log-index a {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-3);
+    padding-block: var(--s-2);
+    border-bottom: var(--hair);
+    color: var(--text);
+    text-decoration: none;
+    font-size: var(--fs-sm);
+  }
+  .log-index a:hover .name {
+    color: var(--accent-text);
+  }
+  .log-index .name {
+    flex: 1;
+    min-width: 0;
+  }
+  .num,
+  .cost {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-variant-numeric: tabular-nums;
+    font-variant-ligatures: none;
+    letter-spacing: var(--track-caps);
+  }
+  .num {
+    color: var(--accent-text);
+  }
+  .cost {
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* One build */
+  .build {
+    display: grid;
+    gap: var(--s-5);
+    padding-block: var(--s-7);
+    border-top: var(--hair);
+    scroll-margin-top: var(--nav-h);
+  }
+  .build > * {
+    min-width: 0;
+  }
+  @media (min-width: 960px) {
+    .build {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--s-7);
+      padding-block: var(--s-8);
+    }
+    .text {
+      position: sticky;
+      top: calc(var(--nav-h) + var(--s-5));
+      align-self: start;
+    }
+  }
+  .text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+  }
+  .meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-4);
+    line-height: 1;
+  }
+  .cost-label {
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .meta .cost {
+    color: var(--text);
+    font-size: var(--fs-sm);
+  }
+  h2 {
+    font-size: var(--fs-xl);
+  }
+  .tagline {
+    font-size: var(--fs-md);
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .links {
+    margin-top: var(--s-3);
+  }
+
+  .media {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+  .lead {
+    margin: 0;
+  }
+  .lead a {
+    display: block;
+    background: var(--surface-2);
+    border: var(--hair);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color var(--dur);
+  }
+  .lead a:hover {
+    border-color: var(--border-strong);
+  }
+  .lead :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 36rem;
+    object-fit: contain;
+  }
+  .lead figcaption {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-2);
+    margin-top: var(--s-2);
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .cap-tag {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .videos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: var(--s-4);
+  }
+
+  /* turboLysis pointer */
+  .paper {
+    padding-block: var(--s-7) var(--s-8);
+    border-top: var(--hair);
+  }
+  .paper-grid {
+    display: grid;
+    gap: var(--s-5);
+    margin-top: var(--s-5);
+  }
+  .paper-grid > * {
+    min-width: 0;
+  }
+  .paper-note {
+    font-size: var(--fs-md);
+    line-height: 1.55;
+    color: var(--muted);
+  }
+  .paper-note a {
+    color: var(--accent-text);
+  }
+  @media (min-width: 960px) {
+    .paper-grid {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+      gap: var(--s-7);
+    }
+  }
+</style>

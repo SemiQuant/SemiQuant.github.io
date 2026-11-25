@@ -19,7 +19,7 @@ const { href, variant = 'primary', external = false, download } = Astro.props;
 
 <a class:list={['btn', variant]} href={href} rel={external ? 'noopener' : undefined} download={download}>
   <span><slot /></span>
-  {external && <span class="arrow" aria-hidden="true">&#8599;</span>}
+  {external && <span class="arrow" aria-hidden="true"><svg viewBox="0 0 10 10" width="10" height="10" focusable="false"><path d="M2.5 7.5l5-5M3.5 2.5h4v4" fill="none" stroke="currentColor" stroke-width="1.25"></path></svg></span>}
 </a>
 
 <style>
@@ -58,7 +58,6 @@ const { href, variant = 'primary', external = false, download } = Astro.props;
     background: var(--surface-2);
   }
   .arrow {
-    font-size: 0.9em;
-    transform: translateY(-1px);
+    flex: none;
   }
 </style>

@@ -1,0 +1,169 @@
+---
+/**
+ * /did-not-work/: projects of kind "failed", sorted by `order`.
+ * The tagline is the statement. The Markdown body is shown only once it
+ * says more than the tagline (see hasRealBody), and the lesson only when
+ * set, so empty entries stay a clean one-line record.
+ */
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Prose from '../components/Prose.astro';
+import NoComments from '../components/gallery/NoComments.astro';
+import ThemePreview from '../components/gallery/ThemePreview.astro';
+import { breadcrumbJsonLd } from '../components/seo/jsonld';
+
+/**
+ * The starter bodies are one sentence that restates the tagline plus an
+ * editor note in an HTML comment. Treat a body as real content once, with
+ * comments removed, it has a second paragraph or runs past 240 characters.
+ */
+function hasRealBody(body: string | undefined): boolean {
+  const text = (body ?? '').replace(/<!--[\s\S]*?-->/g, '').trim();
+  if (!text) return false;
+  return text.split(/\n\s*\n/).filter((p) => p.trim()).length > 1 || text.length > 240;
+}
+
+const entries = (await getCollection('projects', (p) => p.data.kind === 'failed')).sort(
+  (a, b) => a.data.order - b.data.order || a.data.title.localeCompare(b.data.title),
+);
+
+const items = await Promise.all(
+  entries.map(async (entry, i) => {
+    const showBody = hasRealBody(entry.body);
+    const { Content } = showBody ? await render(entry) : { Content: undefined };
+    return {
+      id: entry.id,
+      num: `X-${String(i + 1).padStart(2, '0')}`,
+      d: entry.data,
+      Content,
+      lesson: entry.data.lesson?.trim() || undefined,
+    };
+  }),
+);
+
+const description =
+  'Research ideas by Jason Limberis that failed at the bench, listed in his CV as unsuccessful side projects: lysis methods, host RNA depletion and selective whole-genome amplification for M. tuberculosis.';
+---
+
+<Base
+  title="Things that did not work"
+  description={description}
+  jsonLd={breadcrumbJsonLd([
+    { name: 'Home', href: '/' },
+    { name: 'Things that did not work', href: '/did-not-work/' },
+  ])}
+>
+  <ThemePreview slot="head" />
+
+  <PageHeader
+    label="Did not work"
+    title="Things that did not work"
+    lede="Most ideas fail at the bench. These are some of mine that did. My CV lists them as unsuccessful side projects."
+  />
+
+  <div class="wrap">
+    <ol class="list">
+      {
+        items.map((it) => (
+          <li id={it.id}>
+            <span class="num">{it.num}</span>
+            <div class="entry">
+              <h2>{it.d.title}</h2>
+              <p class="statement">{it.d.tagline}</p>
+              {it.Content && (
+                <Prose>
+                  <NoComments>
+                    <it.Content />
+                  </NoComments>
+                </Prose>
+              )}
+              {it.lesson && (
+                <p class="lesson">
+                  <span class="lesson-label">Lesson</span>
+                  <span>{it.lesson}</span>
+                </p>
+              )}
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+
+    <p class="close">What did work is under <a href="/software/">Methods and software</a>.</p>
+  </div>
+</Base>
+
+<style>
+  .list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-width: 56rem;
+    border-top: var(--hair);
+  }
+  .list > li {
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+    gap: var(--s-4);
+    padding-block: var(--s-5);
+    border-bottom: var(--hair);
+    scroll-margin-top: var(--nav-h);
+  }
+  .num {
+    padding-top: 0.35em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-variant-numeric: tabular-nums;
+    font-variant-ligatures: none;
+    letter-spacing: var(--track-caps);
+    color: var(--faint);
+  }
+  .entry {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+  }
+  h2 {
+    font-size: var(--fs-lg);
+    line-height: var(--lh-snug);
+    letter-spacing: -0.015em;
+  }
+  .statement {
+    max-width: var(--measure);
+    color: var(--muted);
+  }
+  .entry :global(.prose) {
+    margin-top: var(--s-2);
+  }
+  .lesson {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-3);
+    max-width: var(--measure);
+    margin-top: var(--s-2);
+    padding-left: var(--s-4);
+    border-left: 2px solid var(--accent);
+  }
+  .lesson-label {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .close {
+    margin-block: var(--s-6) var(--s-8);
+    color: var(--muted);
+  }
+  .close a {
+    color: var(--accent-text);
+  }
+  @media (min-width: 960px) {
+    .list > li {
+      grid-template-columns: 5rem minmax(0, 1fr);
+      padding-block: var(--s-6);
+    }
+  }
+</style>

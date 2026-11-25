@@ -1,0 +1,11 @@
+---
+/**
+ * Renders its slot with HTML comments removed. Use around a Markdown
+ * <Content /> whose source carries editor notes (<!-- ... -->) that should
+ * not reach the public page.
+ * Usage: <NoComments><Content /></NoComments>
+ */
+const html = (await Astro.slots.render('default')).replace(/<!--[\s\S]*?-->/g, '');
+---
+
+<Fragment set:html={html} />
