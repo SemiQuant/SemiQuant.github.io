@@ -1,3 +1,5 @@
+# CV sections. Generated from the CV by scripts/extract-cv.mjs. Edit the CV, then re-run.
+
 experience:
   - id: ucsf
     role: Assistant Researcher / Postdoctoral Researcher
@@ -5,10 +7,169 @@ experience:
     place: San Francisco, USA
     start: 10/2019
     end: present
-    points: [Stub.]
-education: []
-skills: []
-awards: []
-training: []
-patents: []
-protocols: []
+    points:
+      - Designed and built turboLysis end to end, from mechanics and PCB through firmware and lysis chemistry, and released it as open hardware; the work won follow-on Gates Grand Challenges funding for an automated, battery-powered second build now in validation against commercial bead beating.
+      - Wrote the specific aims for the funded R01 behind XpertNano, moving extraction, amplification, UMI tagging, and nanopore library preparation into a GeneXpert cartridge; set the performance thresholds and go/no-go gates, and ran the technical negotiation with Cepheid, Oxford Nanopore, and FIND.
+      - Developed and published six molecular methods (primerJinn, stilPCR, spotPCR, selSeq, URAdime, CountFU), each released as open-source software or an open protocol.
+      - Build analysis tools in R and Python for colleagues who do not code, including browser-based versions requiring no installation; validated each rewrite against the original outputs before release.
+  - id: uct-lung-institute
+    role: Postdoctoral Researcher
+    org: Centre for Lung Infection and Immunity, University of Cape Town
+    place: Cape Town, South Africa
+    start: 07/2017
+    end: 09/2019
+    points:
+      - Led the bioinformatics group, building the genomic and transcriptomic pipelines used across the centre’s TB projects.
+      - Co-authored the analysis of cough aerosol culture positivity in drug-resistant versus drug-susceptible TB (Nature Medicine, 2020), establishing bacterial and host determinants of patient infectiousness.
+      - Developed methods to recover and analyze the M. tuberculosis transcriptome directly from complex clinical samples.
+      - Coordinated exchange programmes, courses, and mentoring across the EDCTP-funded TESA network of African TB research sites.
+  - id: crg
+    role: Internship
+    org: Novartis–CRG mobility programme, Centre for Genomic Regulation
+    place: Barcelona, Spain
+    start: 01/2017
+    end: 06/2017
+  - id: stellenbosch-cereal-genomics
+    role: Internship
+    org: Cereal Genomics Laboratory, Stellenbosch University
+    place: Stellenbosch, South Africa
+    start: 01/2011
+    end: 11/2012
+
+education:
+  - id: phd
+    degree: PhD, Medicine
+    org: University of Cape Town
+    place: Cape Town, South Africa
+    start: 02/2014
+    end: 06/2017
+    note: Upgraded from MSc to PhD in 2015.
+  - id: bsc-honours
+    degree: BSc Honours, Medical Molecular Biology
+    org: Stellenbosch University
+    place: Stellenbosch, South Africa
+    start: 01/2013
+    end: 12/2013
+  - id: bsc
+    degree: BSc, Molecular Biology with Biotechnology
+    org: Stellenbosch University
+    place: Stellenbosch, South Africa
+    start: 01/2008
+    end: 06/2012
+
+skills:
+  - id: computational
+    label: Computational
+    body: |-
+      Languages: R, Python, Bash.
+      Analysis: bioinformatics pipeline development (Nextflow, Snakemake-style workflows), genome assembly and variant calling, amplicon and whole-genome sequencing analysis, RNA-seq and differential expression, nanopore and Illumina data processing, interactive web applications (R Shiny, self-contained HTML/JavaScript).
+  - id: statistics-and-ml
+    label: Statistics & ML
+    body: Descriptive statistics; regression and classification; survival analysis (Cox proportional hazards, Kaplan–Meier); genome-wide association studies; machine learning (support vector machines, XGBoost, random forests, boosted trees); population genetics; graph theory.
+  - id: laboratory
+    label: Laboratory
+    body: Biosafety Level 3 certified. Mycobacterial, bacterial, and yeast cell culture; DNA, RNA, and plasmid isolation (manual methods); PCR, qPCR, digital PCR, and RT-PCR; sequencing library preparation (Illumina, Oxford Nanopore); cloning; protein expression; PAGE; Southern and Western blotting; confocal and scanning electron microscopy.
+  - id: engineering
+    label: Engineering
+    body: "Instrument prototyping: 3D printing, CNC machining, laser cutting, PCB design and soldering, embedded firmware. Adobe Illustrator and Photoshop."
+
+awards:
+  - id: best-postgraduate-publication-2018
+    year: 2018
+    title: Best Postgraduate Publication
+    org: Faculty of Health Sciences, University of Cape Town
+  - id: best-oral-presentation-2017
+    year: 2017
+    title: Best Oral Presentation
+    org: South African Thoracic Society (SATS) Conference
+
+training:
+  - id: genetic-data-analysis-using-r
+    title: Genetic Data Analysis Using R
+    provider: PRstatistics, Scotland
+  - id: bioinformatics-training-2-2-weeks
+    title: Bioinformatics Training (2 × 2 weeks)
+    provider: London School of Hygiene & Tropical Medicine, London
+  - id: gene-expression-biomarker-masterclass
+    title: Gene Expression Biomarker Masterclass
+    provider: University of Cape Town, Cape Town
+  - id: next-generation-sequencing
+    title: Next Generation Sequencing
+    provider: Central Analytical Facilities, Cape Town
+  - id: digital-and-rt-pcr
+    title: Digital and RT-PCR
+    provider: Central Analytical Facilities, Cape Town
+  - id: good-clinical-laboratory-practice
+    title: Good Clinical Laboratory Practice
+    provider: HIV Vaccine Trials Network, Cape Town
+  - id: machine-learning
+    title: Machine Learning
+    provider: Stanford University, online
+  - id: writing-in-the-sciences
+    title: Writing in the Sciences
+    provider: Stanford University, online
+  - id: game-theory
+    title: Game Theory
+    provider: Stanford University, online
+  - id: deep-learning-specialization-4-courses
+    title: Deep Learning Specialization (4 courses)
+    provider: DeepLearning.AI, online
+  - id: data-science-specialization-10-courses
+    title: Data Science Specialization (10 courses)
+    provider: Johns Hopkins University, online
+  - id: genomic-data-science-specialization-8-courses
+    title: Genomic Data Science Specialization (8 courses)
+    provider: Johns Hopkins University, online
+  - id: biostatistics-in-public-health-specialization-4-courses
+    title: Biostatistics in Public Health Specialization (4 courses)
+    provider: Johns Hopkins University, online
+  - id: statistical-reasoning-for-public-health-1-and-2
+    title: Statistical Reasoning for Public Health 1 & 2
+    provider: Johns Hopkins University, online
+  - id: statistical-inference
+    title: Statistical Inference
+    provider: Johns Hopkins University, online
+  - id: phylogenetics-an-introduction
+    title: "Phylogenetics: An Introduction"
+    provider: EMBL–EBI, online
+  - id: epidemics-the-dynamics-of-infectious-disease
+    title: "Epidemics: The Dynamics of Infectious Disease"
+    provider: Pennsylvania State University, online
+  - id: ibm-cognitive-class
+    title: IBM Cognitive Class
+    provider: Big Data University, online
+
+patents:
+  - id: circular-deoxyribonucleic-acids-2025
+    year: 2025
+    status: Pending
+    title: Methods for Producing Circular Deoxyribonucleic Acids
+    inventors: Metcalfe JZ, Limberis JD
+    detail: "Assignee: The Regents of the University of California. US patent application 18/698,192; published 2 October 2025 as US 2025/0305040 A1. International application WO 2023/060138."
+    url: https://patents.google.com/patent/US20250305040A1/en
+
+protocols:
+  - id: easydb
+    name: easyDB
+    description: Circularization of rv0678 for genotypic bedaquiline resistance testing of Mycobacterium tuberculosis.
+    authors: Limberis JD, Nalyvayko A, Ernst JD, Metcalfe JZ
+  - id: udumbell
+    name: uDumBell
+    description: Circularization of rv0678 for genotypic bedaquiline resistance testing of Mycobacterium tuberculosis.
+    authors: Limberis JD, Nalyvayko A, Ernst JD, Metcalfe JZ
+  - id: selseq
+    name: selSeq
+    description: Enrichment of non-polyadenylated RNAs, including enhancer and long non-coding RNAs, for sequencing.
+    authors: Limberis JD, Nalyvayko A, Ernst JD, Metcalfe JZ
+  - id: bead-beating
+    name: Bead beating
+    description: Bead beating in custom buffer followed by XP bead cleanup (NGS workflow).
+    authors: Limberis JD, Nalyvayko A, Steyn J, Williams J, Grobbelaar M, Warren RM, Metcalfe JZ
+  - id: single-cell-prep
+    name: Single-cell prep
+    description: Sputum sample processing for single-cell isolation and live recovery for single-cell RNA sequencing.
+    authors: Limberis JD, Nalyvayko A, Pooran A, Tomasicchio M, Shameem J, Dheda K, Metcalfe JZ
+  - id: polysome-profiling
+    name: Polysome profiling
+    description: Rapid ribosome (polysome) profiling.
+    authors: Limberis JD, Chen Y

@@ -1,0 +1,472 @@
+---
+/**
+ * Living style guide at /styleguide/ (noindex). Every component in
+ * realistic use, with real collection data where it exists.
+ * Append ?theme=light or ?theme=dark to preview a theme without saving it.
+ */
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { profile } from '../data/profile';
+import {
+  formatRange,
+  pubCounts,
+  pubNumbers,
+  sortByDateDesc,
+  sortPubs,
+} from '../lib/format';
+import PageHeader from '../components/PageHeader.astro';
+import SectionLabel from '../components/SectionLabel.astro';
+import StatStrip from '../components/StatStrip.astro';
+import TagChip from '../components/TagChip.astro';
+import StatusDot from '../components/StatusDot.astro';
+import ButtonLink from '../components/ButtonLink.astro';
+import ExternalLinks from '../components/ExternalLinks.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import PubList from '../components/PubList.astro';
+import Timeline from '../components/Timeline.astro';
+import Gallery from '../components/Gallery.astro';
+import LiteYouTube from '../components/LiteYouTube.astro';
+import VideoClip from '../components/VideoClip.astro';
+import Prose from '../components/Prose.astro';
+import QpcrCurve from '../components/QpcrCurve.astro';
+
+const safe = async <T,>(fn: () => Promise<T[]>): Promise<T[]> => {
+  try {
+    return (await fn()) ?? [];
+  } catch {
+    return [];
+  }
+};
+
+const pubs = sortPubs(await safe(() => getCollection('publications')));
+const projects = (await safe(() => getCollection('projects'))).sort((a, b) => a.data.order - b.data.order);
+const builds = (await safe(() => getCollection('builds'))).sort((a, b) => a.data.order - b.data.order);
+const experience = sortByDateDesc(await safe(() => getCollection('experience')));
+
+const cvPubs = pubs.filter((p) => p.data.inCv);
+const counts = pubCounts(cvPubs);
+const numbers = pubNumbers(pubs);
+
+const stats = [
+  { value: counts.total, label: 'Publications' },
+  { value: counts.firstOrJoint, label: 'First or joint first' },
+  { value: profile.metrics.hIndex, label: 'h-index' },
+  { value: profile.metrics.citations.toLocaleString('en-US'), label: 'Citations' },
+];
+
+// Pick varied cards: with a cover, with stats, a failed one, then fill up.
+const picks = [
+  projects.find((p) => p.data.cover),
+  projects.find((p) => p.data.stats.length > 0 && !p.data.cover),
+  projects.find((p) => p.data.kind === 'failed'),
+  ...projects,
+].filter((p, i, arr): p is (typeof projects)[number] => !!p && arr.indexOf(p) === i);
+const cardProjects = picks.slice(0, 3);
+const linkProject = projects.find((p) => Object.keys(p.data.links ?? {}).length >= 2);
+
+const galleryImages = builds.flatMap((b) => b.data.images).slice(0, 8);
+const yt = builds.flatMap((b) => b.data.youtube)[0];
+const clip = builds.flatMap((b) => b.data.videos)[0];
+const tags = [...new Set(pubs.flatMap((p) => p.data.tags))].slice(0, 8);
+
+const timelineItems = experience.slice(0, 3).map((e) => ({
+  when: formatRange(e.data.start, e.data.end),
+  title: e.data.role,
+  meta: `${e.data.org}, ${e.data.place}`,
+  points: e.data.points.slice(0, 2),
+  current: /present/i.test(e.data.end),
+}));
+
+const swatches = [
+  ['--bg', 'Page'],
+  ['--surface', 'Cards, bars'],
+  ['--surface-2', 'Insets, hover'],
+  ['--border', 'Hairlines'],
+  ['--border-strong', 'Emphasis rules'],
+  ['--faint', 'Tertiary text'],
+  ['--muted', 'Secondary text'],
+  ['--text', 'Primary text'],
+  ['--accent', 'Fills, strokes'],
+  ['--accent-text', 'Orange text, links'],
+  ['--accent-soft', 'Tinted fills'],
+  ['--accent-ink', 'Text on accent'],
+  ['--ok', 'Status ok'],
+  ['--warn', 'Status in progress'],
+  ['--idle', 'Status idle'],
+  ['--accent-2', 'Decorative only'],
+];
+
+const typeScale = [
+  ['--fs-2xl', 'h1', 'Tuberculosis diagnostics'],
+  ['--fs-xl', 'h2', 'Methods and software'],
+  ['--fs-lg', 'h3', 'Amplicon sequencing'],
+  ['--fs-md', 'h4, lede', 'Drug resistance testing from sputum'],
+  ['--fs-base', 'body', 'Body text at the 68ch reading measure.'],
+  ['--fs-sm', 'secondary', 'Authors, captions and card text.'],
+  ['--fs-xs', 'mono', 'DOI 10.1016/j.ohx.2024.e00576'],
+  ['--fs-2xs', 'mono caps', 'AS OF 2026-10'],
+];
+---
+
+<Base title="Style guide" description="Components and design tokens for semiquant.com." noindex>
+  <script is:inline slot="head">
+    (function () {
+      var t = new URLSearchParams(location.search).get('theme');
+      if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+    })();
+  </script>
+
+  <PageHeader
+    index="00"
+    label="Style guide"
+    title="Components and tokens"
+    lede="Dark first, mono details, one orange accent. Each block below is a real component with live data where the collections have it."
+  >
+    <div class="cluster">
+      <ThemeToggle />
+      <span class="label">Tokens in src/styles/tokens.css</span>
+    </div>
+  </PageHeader>
+
+  <div class="wrap">
+    <section class="sg">
+      <SectionLabel index="01" label="Color" />
+      <ul class="swatches">
+        {
+          swatches.map(([token, use]) => (
+            <li>
+              <span class="chip-color" style={`background:var(${token})`} />
+              <code>{token}</code>
+              <span class="use">{use}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <div class="contrast">
+        <p style="color:var(--text)">Primary text on the page background.</p>
+        <p style="color:var(--muted)">Secondary text for authors and captions.</p>
+        <p style="color:var(--faint)">Tertiary text for ids and stamps.</p>
+        <p><a href="#color">Link in --accent-text</a></p>
+        <p><span class="on-accent">Dark ink on an accent fill</span></p>
+      </div>
+    </section>
+
+    <section class="sg">
+      <SectionLabel index="02" label="Type" />
+      <div class="type-scale">
+        {
+          typeScale.map(([token, role, sample]) => (
+            <div class="type-row">
+              <p class="label">
+                {token}
+                <br />
+                {role}
+              </p>
+              <p
+                class:list={['sample', { mono: role.startsWith('mono') }]}
+                style={`font-size:var(${token});${
+                  token === '--fs-2xl' || token === '--fs-xl' || token === '--fs-lg'
+                    ? 'font-weight:620;line-height:1.1;letter-spacing:-0.02em'
+                    : ''
+                }${role === 'mono caps' ? 'letter-spacing:var(--track-caps)' : ''}`}
+              >
+                {sample}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+      <p class="note">
+        Inter Variable for text. JetBrains Mono Variable for labels, numbers, dates, DOIs and ids:
+        <span class="mono">0123456789 P-036 2026-10 10.1128/jcm.00916-21</span>
+      </p>
+    </section>
+
+    <section class="sg">
+      <SectionLabel index="03" label="Section labels" />
+      <div class="stack" style="--gap:var(--s-5)">
+        <SectionLabel index="01" label="Research" />
+        <SectionLabel index="02" label="Methods & software">
+          <a slot="aside" href="/software/">View all</a>
+        </SectionLabel>
+        <SectionLabel label="Selected publications" as="h3">
+          <span slot="aside">{pubs.length} entries</span>
+        </SectionLabel>
+      </div>
+    </section>
+
+    <section class="sg">
+      <SectionLabel index="04" label="Stat strip" />
+      <StatStrip stats={stats} stamp={`as of ${profile.metrics.asOf}`} />
+      <div class="spacer"></div>
+      <StatStrip
+        label="Unit example"
+        stats={[
+          { value: 40, unit: 'cycles', label: 'Run length' },
+          { value: '3.3', unit: 'Ct', label: 'Per ten-fold dilution' },
+          { value: 96, unit: 'wells', label: 'Plate format' },
+        ]}
+      />
+      <p class="note">Second strip shows the unit slot with generic qPCR numbers, not site data.</p>
+    </section>
+
+    <section class="sg">
+      <SectionLabel index="05" label="Buttons, chips, status" />
+      <div class="stack" style="--gap:var(--s-5)">
+        <div class="cluster">
+          <ButtonLink href="/publications/" variant="primary">Publications</ButtonLink>
+          <ButtonLink href={profile.cvPdf} variant="ghost">CV (PDF)</ButtonLink>
+          <ButtonLink href={profile.links[0].url} variant="ghost" external>GitHub</ButtonLink>
+        </div>
+        <div class="cluster" style="--gap:var(--s-2)">
+          <TagChip tone="accent">featured</TagChip>
+          {(tags.length > 0 ? tags : ['tuberculosis', 'qPCR', 'nanopore']).map((t) => <TagChip>{t}</TagChip>)}
+          <TagChip href="/publications/">linked chip</TagChip>
+        </div>
+        <div class="cluster" style="--gap:var(--s-5)">
+          <StatusDot state="ok" label="Published" />
+          <StatusDot state="warn" label="In validation" />
+          <StatusDot state="idle" label="Archived" />
+        </div>
+        {
+          linkProject && (
+            <div>
+              <p class="label" style="margin-bottom:var(--s-2)">ExternalLinks: {linkProject.data.title}</p>
+              <ExternalLinks links={linkProject.data.links} />
+            </div>
+          )
+        }
+      </div>
+    </section>
+
+    <section class="sg">
+      <SectionLabel index="06" label="Project cards">
+        <span slot="aside">{projects.length} in collection</span>
+      </SectionLabel>
+      {
+        cardProjects.length > 0 ? (
+          <ul class="cards">
+            {cardProjects.map((p) => (
+              <li>
+                <ProjectCard project={p} href={p.data.detail ? `/software/${p.id}/` : undefined} />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="note">No projects in the collection yet.</p>
+        )
+      }
+    </section>
+
+    <section class="sg">
+      <SectionLabel index="07" label="Publications">
+        <span slot="aside">filterable</span>
+      </SectionLabel>
+      <PubList pubs={pubs.slice(0, 8)} numbers={numbers} filterable />
+      <div class="spacer"></div>
+      <SectionLabel label="Compact, no ids" as="h3" />
+      <PubList pubs={pubs.filter((p) => p.data.role === 'joint-first').slice(0, 2)} showIds={false} />
+    </section>
+
+    <section class="sg">
+      <SectionLabel index="08" label="Timeline" />
+      {
+        timelineItems.length > 0 ? (
+          <Timeline items={timelineItems} />
+        ) : (
+          <p class="note">No experience entries yet.</p>
+        )
+      }
+    </section>
+
+    <section class="sg">
+      <SectionLabel index="09" label="Media" />
+      <div class="stack" style="--gap:var(--s-6)">
+        {
+          galleryImages.length > 0 ? (
+            <Gallery images={galleryImages} />
+          ) : (
+            <p class="note">Gallery: no build images in the collection yet.</p>
+          )
+        }
+        <div class="grid-12">
+          <div style="--sm:6">
+            {yt ? <LiteYouTube id={yt.id} title={yt.title} /> : <p class="note">LiteYouTube: no YouTube ids in the builds collection yet.</p>}
+          </div>
+          <div style="--sm:6">
+            {clip ? <VideoClip src={clip.src} poster={clip.poster} title={clip.title} /> : <p class="note">VideoClip: no self-hosted clips in the builds collection yet.</p>}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="sg">
+      <SectionLabel index="10" label="Prose" />
+      <Prose>
+        <h2>Markdown heading, level two</h2>
+        <p>
+          Body copy sits at a 68 character measure. Links look like <a href="#prose">this one</a>, inline code like
+          <code>--min-tm 60</code>, and <strong>strong text</strong> is slightly heavier. Species names such as
+          <em>Mycobacterium tuberculosis</em> are set in italics.
+        </p>
+        <h3>Level three</h3>
+        <ul>
+          <li>Unordered item with a short line.</li>
+          <li>A second item that runs longer so the wrap and hanging indent are visible at narrow widths.</li>
+        </ul>
+        <ol>
+          <li>Ordered step one.</li>
+          <li>Ordered step two.</li>
+        </ol>
+        <blockquote><p>A blockquote, for a note or a quoted line.</p></blockquote>
+        <pre><code>{`# shell example
+tool --input reads.fastq.gz \\
+     --output results/`}</code></pre>
+        <h4>Level four label</h4>
+        <table>
+          <thead><tr><th>Column</th><th>Value</th><th>Unit</th></tr></thead>
+          <tbody>
+            <tr><td>Row one</td><td class="mono">12.5</td><td>min</td></tr>
+            <tr><td>Row two</td><td class="mono">96</td><td>wells</td></tr>
+          </tbody>
+        </table>
+      </Prose>
+    </section>
+
+    <section class="sg">
+      <SectionLabel index="11" label="qPCR curve" />
+      <div class="curve-frame">
+        <QpcrCurve />
+      </div>
+      <p class="note">
+        Home hero graphic. A ten-fold dilution series on a log axis with a dashed threshold. Decorative and hidden from
+        assistive tech. Draws in once; static under reduced motion.
+      </p>
+    </section>
+  </div>
+
+  <section class="sg sample">
+    <div class="wrap">
+      <SectionLabel index="12" label="Sample page section" />
+      <div class="grid-12 hero">
+        <div style="--md:6" class="stack hero-copy">
+          <p class="label">{profile.affiliation.title}, {profile.affiliation.orgShort}</p>
+          <h2 class="hero-title">{profile.name}</h2>
+          <p class="lede">
+            {profile.role}. {profile.focus.join(', ')}.
+          </p>
+          <div class="cluster">
+            <ButtonLink href="/research/" variant="primary">Research</ButtonLink>
+            <ButtonLink href="/software/" variant="ghost">Methods & software</ButtonLink>
+          </div>
+        </div>
+        <div style="--md:6">
+          <QpcrCurve />
+        </div>
+      </div>
+      <StatStrip stats={stats} stamp={`as of ${profile.metrics.asOf}`} />
+    </div>
+  </section>
+</Base>
+
+<style>
+  .sg {
+    padding-block: var(--s-6);
+    scroll-margin-top: var(--nav-h);
+  }
+  .sg + .sg {
+    border-top: 0;
+  }
+  .spacer {
+    height: var(--s-6);
+  }
+  .note {
+    margin-top: var(--s-4);
+    max-width: var(--measure);
+    font-size: var(--fs-sm);
+    color: var(--muted);
+  }
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+    gap: var(--s-4) var(--s-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .swatches li {
+    display: grid;
+    gap: 0.2rem;
+  }
+  .chip-color {
+    height: 3rem;
+    border: var(--hair);
+    border-radius: var(--radius);
+  }
+  .swatches code {
+    margin-top: var(--s-1);
+    font-size: var(--fs-xs);
+  }
+  .use {
+    font-size: var(--fs-xs);
+    color: var(--muted);
+  }
+  .contrast {
+    display: grid;
+    gap: var(--s-1);
+    margin-top: var(--s-5);
+    padding: var(--s-4);
+    border: var(--hair);
+    border-radius: var(--radius);
+    font-size: var(--fs-sm);
+  }
+  .on-accent {
+    display: inline-block;
+    padding: 0.1rem var(--s-2);
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-radius: var(--radius);
+    font-weight: 600;
+  }
+  .type-row {
+    display: grid;
+    gap: var(--s-1) var(--s-5);
+    align-items: baseline;
+    padding-block: var(--s-3);
+    border-bottom: var(--hair);
+  }
+  @media (min-width: 640px) {
+    .type-row {
+      grid-template-columns: 8rem minmax(0, 1fr);
+    }
+  }
+  .type-row .label {
+    font-size: var(--fs-2xs);
+    line-height: 1.5;
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .sample {
+    min-width: 0;
+  }
+  .curve-frame {
+    max-width: 44rem;
+    padding: var(--s-4);
+    background: var(--surface);
+    border: var(--hair);
+    border-radius: var(--radius);
+  }
+  .sample {
+    overflow-wrap: anywhere;
+  }
+  .hero {
+    align-items: center;
+    margin-bottom: var(--s-6);
+  }
+  .hero-title {
+    font-size: var(--fs-2xl);
+    letter-spacing: -0.028em;
+    line-height: 1.05;
+  }
+</style>

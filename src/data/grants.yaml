@@ -1,7 +1,57 @@
+# Major projects and funding. Generated from the CV by scripts/extract-cv.mjs.
+
+- id: nih-xpertnano
+  title: A novel cartridge-based sequencing solution for decentralized M. tuberculosis resistance detection
+  funder: National Institutes of Health
+  start: 2023
+  end: 2028
+  role: Laboratory lead
+  summary: Designing, optimizing, and validating novel sequencing strategies to facilitate early, appropriate drug-resistant TB treatment under programmatic conditions, in collaboration with Cepheid.
+
 - id: gates-turbolysis
   title: "turboLysis: a low-cost, small-footprint device for efficient Mycobacterium tuberculosis cell lysis"
   funder: Bill & Melinda Gates Foundation, Grand Challenges
   start: 2026
   end: 2027
   role: Laboratory lead
-  summary: Stub.
+  summary: Designed and built the device, including the mechanics, which I 3D printed and machined by CNC, and the PCB, which I designed, soldered, and tested. Developed a novel lysis buffer that removes PCR inhibitors. Benchmarking the device against commercial bead beating by qPCR, TapeStation, multiplex PCR with nanopore sequencing, and Deeplex Myc-TB on Illumina, and evaluating it on sputum in parallel with the TSELiOT trial workflow.
+
+- id: nih-tseliot
+  title: Pragmatic use of next-generation sequencing for management of drug-resistant tuberculosis (TSELiOT)
+  funder: National Institutes of Health
+  start: 2022
+  end: 2027
+  role: DNA extraction method development
+  summary: Developing the DNA extraction methods used to isolate M. tuberculosis DNA for targeted and whole-genome sequencing in the clinical trial. Assisting and supporting the laboratory team.
+
+- id: pbbr-dual-scrnaseq
+  title: Enabling dual single-cell RNA sequencing of host and intracellular pathogens
+  funder: Program for Breakthrough Biomedical Research (PBBR)
+  start: 2021
+  end: 2022
+  role: Laboratory lead
+  summary: Designed and tested several novel devices built on the principles underlying electroporation, and developed methods to selectively deplete host RNA from pathogen-infected cells.
+
+- id: nih-infectiousness
+  title: Host and microbiological determinants of infectiousness in patients with drug-susceptible, multidrug-resistant, and extensively drug-resistant tuberculosis
+  funder: National Institutes of Health
+  start: 2014
+  end: 2018
+  role: Project management and laboratory lead
+  summary: Developed new methods to interrogate and analyze the bacterial transcriptome in complex clinical samples; performed data analysis and interpretation.
+
+- id: oppenheimer-incurable-tb
+  title: Diagnosis, spread, and management of incurable tuberculosis in the Western Cape Province of South Africa
+  funder: Oppenheimer Memorial Trust
+  start: 2014
+  end: 2017
+  role: Project manager and laboratory lead
+  summary: Performed culture and DNA extraction, and analyzed clinical and whole-genome sequence data to determine risk factors for and transmission of incurable tuberculosis.
+
+- id: edctp-tesa
+  title: TESA networks of excellence for the evaluation of new diagnostics and interventions for tuberculosis (TESA)
+  funder: European & Developing Countries Clinical Trials Partnership (EDCTP)
+  start: 2017
+  end: 2020
+  role: Project manager
+  summary: Coordinated exchange programmes and courses within the TESA network and assisted in the development of mentoring programmes.

@@ -1,0 +1,55 @@
+---
+/**
+ * Self-hosted clip with native controls. Nothing downloads until play.
+ * Usage: <VideoClip src="/video/turbolysis-run.mp4" poster="/video/turbolysis-run.jpg" title="A lysis run" />
+ * src and poster are paths under public/.
+ */
+interface Props {
+  src: string;
+  poster?: string;
+  title: string;
+}
+
+const { src, poster, title } = Astro.props;
+---
+
+<figure class="clip">
+  <video controls preload="none" playsinline poster={poster} aria-label={title}>
+    <source src={src} />
+    <a href={src}>Download the video: {title}</a>
+  </video>
+  <figcaption>
+    <span class="tag" aria-hidden="true">Clip</span>
+    <span>{title}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .clip {
+    margin: 0;
+  }
+  video {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border: var(--hair);
+    border-radius: var(--radius);
+  }
+  figcaption {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-2);
+    margin-top: var(--s-2);
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .tag {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+</style>

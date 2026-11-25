@@ -1,0 +1,218 @@
+---
+/**
+ * Card for one entry of the `projects` collection: kind, status, title,
+ * tagline, optional cover, up to 3 stats, external links.
+ * Usage:
+ *   <ul class="cards">
+ *     {projects.map((p) => <li><ProjectCard project={p} href={`/software/${p.id}/`} /></li>)}
+ *   </ul>
+ * With href the whole card is clickable (the title link is stretched over
+ * the card; the external links stay separately clickable above it).
+ * For kind "failed" the lesson is shown under the tagline.
+ */
+import type { CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import { kindLabel, statusState } from '../lib/format';
+import StatusDot from './StatusDot.astro';
+import ExternalLinks from './ExternalLinks.astro';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  href?: string;
+  /** Heading level for the title. Default h3. */
+  as?: 'h2' | 'h3' | 'h4';
+}
+
+const { project, href, as: Tag = 'h3' } = Astro.props;
+const d = project.data;
+const stats = (d.stats ?? []).slice(0, 3);
+// Skip a status that only repeats the kind label ("Did not work").
+const status = d.status && d.status.toLowerCase() !== kindLabel(d.kind).toLowerCase() ? d.status : undefined;
+---
+
+<article class:list={['card', { linked: !!href }]}>
+  {
+    d.cover && (
+      <div class="cover">
+        <Image src={d.cover} alt={d.coverAlt ?? ''} width={640} height={360} fit="cover" loading="lazy" />
+      </div>
+    )
+  }
+  <div class="body">
+    <p class="meta">
+      <span class="kind">{kindLabel(d.kind)}</span>
+      {d.year && <span class="year">{d.year}</span>}
+      {status && <StatusDot state={statusState(status)} label={status} />}
+    </p>
+    <Tag class="title">
+      {href ? <a href={href}>{d.title}</a> : d.title}
+    </Tag>
+    <p class="tagline">{d.tagline}</p>
+    {
+      d.kind === 'failed' && d.lesson && (
+        <p class="lesson">
+          <span class="lesson-label">Lesson</span> {d.lesson}
+        </p>
+      )
+    }
+    {
+      stats.length > 0 && (
+        <dl class="stats">
+          {stats.map((s) => (
+            <div>
+              <dt>{s.label}</dt>
+              <dd>{s.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )
+    }
+    <div class="links">
+      <ExternalLinks links={d.links} label={`${d.title} links`} />
+    </div>
+  </div>
+</article>
+
+<style>
+  .card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--surface);
+    border: var(--hair);
+    border-radius: var(--radius);
+    transition: border-color var(--dur);
+  }
+  .card.linked:hover,
+  .card.linked:focus-within {
+    border-color: var(--border-strong);
+  }
+  .cover {
+    border-bottom: var(--hair);
+    background: var(--surface-2);
+  }
+  .cover :global(img) {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 1px 1px 0 0;
+  }
+  .body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: var(--s-3);
+    padding: var(--s-4) var(--s-4) var(--s-3);
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-1) var(--s-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    line-height: 1.2;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+  }
+  .kind {
+    color: var(--accent-text);
+  }
+  .year {
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .meta :global(.status) {
+    margin-left: auto;
+  }
+  .title {
+    font-size: var(--fs-md);
+    line-height: var(--lh-snug);
+    letter-spacing: -0.01em;
+  }
+  .title a {
+    color: var(--text);
+    text-decoration: none;
+  }
+  /* Stretched link: the whole card is the hit area. */
+  .title a::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  .card.linked:hover .title a {
+    color: var(--accent-text);
+  }
+  .title a:focus-visible {
+    outline: none;
+  }
+  .title a:focus-visible::after {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius);
+  }
+  .tagline {
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .lesson {
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    padding-left: var(--s-3);
+    border-left: 2px solid var(--border-strong);
+  }
+  .lesson-label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-right: 0.4em;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-3);
+    margin: 0;
+    padding-top: var(--s-3);
+    border-top: var(--hair);
+  }
+  .stats div {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+  .stats dt {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .stats dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-base);
+    font-weight: 500;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+  .links {
+    position: relative;
+    z-index: 2;
+    margin-top: auto;
+  }
+  .links:empty {
+    display: none;
+  }
+  .links :global(.ext-links) {
+    padding-top: var(--s-2);
+    border-top: var(--hair);
+  }
+</style>

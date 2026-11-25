@@ -1,0 +1,49 @@
+---
+/**
+ * Status indicator: a small colored dot plus a text label that is always
+ * visible, so the state never depends on color alone.
+ * Usage: <StatusDot state="ok" label="Published" />
+ * States: ok (green), warn (amber, in progress), idle (gray).
+ * See statusState() in src/lib/format.ts to derive a state from free text.
+ */
+interface Props {
+  state: 'ok' | 'warn' | 'idle';
+  label: string;
+}
+
+const { state, label } = Astro.props;
+---
+
+<span class:list={['status', state]}><span class="dot" aria-hidden="true"></span>{label}</span>
+
+<style>
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    line-height: 1.2;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .dot {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--idle);
+  }
+  .ok .dot {
+    background: var(--ok);
+  }
+  .warn .dot {
+    background: var(--warn);
+  }
+  .idle .dot {
+    background: transparent;
+    border: 1px solid var(--idle);
+  }
+</style>

@@ -1,0 +1,132 @@
+---
+/**
+ * Vertical timeline for roles, education, grants.
+ * Usage:
+ *   <Timeline items={[
+ *     { when: formatRange('10/2019', 'present'), title: 'Assistant Researcher', meta: 'UCSF', current: true,
+ *       points: ['Point one.', 'Point two.'] },
+ *   ]} />
+ * when: date text (mono). meta: organization or place. body: one paragraph.
+ * points: optional bullet list. current: accent marker and a "Now" tag.
+ */
+interface Props {
+  items: { when: string; title: string; meta?: string; body?: string; points?: readonly string[]; current?: boolean }[];
+}
+
+const { items } = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <ol class="timeline">
+      {items.map((it) => (
+        <li class:list={{ current: it.current }}>
+          <p class="when">
+            <span>{it.when}</span>
+            {it.current && <span class="now">Now</span>}
+          </p>
+          <div class="content">
+            <p class="title">{it.title}</p>
+            {it.meta && <p class="meta">{it.meta}</p>}
+            {it.body && <p class="body">{it.body}</p>}
+            {it.points && it.points.length > 0 && (
+              <ul class="points">
+                {it.points.map((p) => (
+                  <li>{p}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+<style>
+  .timeline {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .timeline > li {
+    position: relative;
+    display: grid;
+    gap: var(--s-1) var(--s-5);
+    padding: 0 0 var(--s-5) var(--s-5);
+    border-left: var(--hair);
+  }
+  .timeline > li:last-child {
+    padding-bottom: 0;
+  }
+  /* Marker on the rail. */
+  .timeline > li::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: 0.45rem;
+    width: 7px;
+    height: 7px;
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+  }
+  .timeline > li.current::before {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  @media (min-width: 640px) {
+    .timeline > li {
+      grid-template-columns: 11.5rem minmax(0, 1fr);
+    }
+  }
+  .when {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: flex-start;
+    gap: var(--s-1) var(--s-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    line-height: 1.8;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+  }
+  .now {
+    padding: 0 0.35rem;
+    background: var(--accent-soft);
+    border-radius: var(--radius);
+    font-size: var(--fs-2xs);
+    line-height: 1.5;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+  .content {
+    display: grid;
+    gap: var(--s-1);
+    max-width: var(--measure);
+  }
+  .title {
+    font-weight: 620;
+    line-height: var(--lh-snug);
+  }
+  .meta {
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .body,
+  .points {
+    margin-top: var(--s-1);
+    font-size: var(--fs-sm);
+    line-height: 1.55;
+  }
+  .points {
+    display: grid;
+    gap: var(--s-1);
+    padding-left: 1.1rem;
+  }
+  .points li::marker {
+    color: var(--faint);
+  }
+</style>

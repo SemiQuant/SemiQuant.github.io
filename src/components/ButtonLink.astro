@@ -1,0 +1,64 @@
+---
+/**
+ * Link styled as a button.
+ * Usage: <ButtonLink href="/cv/" variant="primary">View CV</ButtonLink>
+ *        <ButtonLink href="https://github.com/SemiQuant" variant="ghost" external>GitHub</ButtonLink>
+ * primary: orange fill with dark text. ghost: outlined.
+ * external adds rel="noopener" and a small arrow.
+ */
+interface Props {
+  href: string;
+  variant?: 'primary' | 'ghost';
+  external?: boolean;
+  /** Set for file links, e.g. download="Jason-Limberis-CV.pdf". */
+  download?: string | boolean;
+}
+
+const { href, variant = 'primary', external = false, download } = Astro.props;
+---
+
+<a class:list={['btn', variant]} href={href} rel={external ? 'noopener' : undefined} download={download}>
+  <span><slot /></span>
+  {external && <span class="arrow" aria-hidden="true">&#8599;</span>}
+</a>
+
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-2);
+    min-height: 2.5rem;
+    padding: 0 var(--s-4);
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    line-height: 1.2;
+    text-decoration: none;
+    transition:
+      background-color var(--dur),
+      border-color var(--dur),
+      color var(--dur);
+  }
+  .primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+  .primary:hover {
+    background: var(--accent-3);
+  }
+  .ghost {
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+  .ghost:hover {
+    border-color: var(--text);
+    background: var(--surface-2);
+  }
+  .arrow {
+    font-size: 0.9em;
+    transform: translateY(-1px);
+  }
+</style>

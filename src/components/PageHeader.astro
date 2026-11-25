@@ -1,0 +1,72 @@
+---
+/**
+ * Top of an inner page: channel label, <h1>, optional lede, then the default
+ * slot (buttons, a StatStrip, meta). Wraps itself in .wrap.
+ * Usage: <PageHeader index="03" label="Publications" title="Publications" lede="..." />
+ */
+interface Props {
+  index?: string | number;
+  /** Short channel label shown above the title. */
+  label: string;
+  title: string;
+  lede?: string;
+}
+
+const { index, label, title, lede } = Astro.props;
+const idx = index === undefined ? undefined : String(index).padStart(2, '0');
+---
+
+<header class="page-header">
+  <div class="wrap">
+    <p class="channel">
+      {idx && <span class="idx">{idx}</span>}
+      {idx && <span class="sep" aria-hidden="true">/</span>}
+      <span>{label}</span>
+    </p>
+    <h1>{title}</h1>
+    {lede && <p class="lede">{lede}</p>}
+    {Astro.slots.has('default') && <div class="extra"><slot /></div>}
+  </div>
+</header>
+
+<style>
+  .page-header {
+    padding-block: var(--s-7) var(--s-6);
+    border-bottom: var(--hair);
+    margin-bottom: var(--s-7);
+  }
+  @media (min-width: 960px) {
+    .page-header {
+      padding-block: var(--s-8) var(--s-7);
+    }
+  }
+  .channel {
+    display: flex;
+    gap: 0.6em;
+    margin-bottom: var(--s-4);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+  }
+  .idx {
+    color: var(--accent-text);
+  }
+  .sep {
+    color: var(--faint);
+  }
+  h1 {
+    font-size: clamp(2rem, 1.4rem + 2.6vw, 3.25rem);
+    max-width: 22ch;
+  }
+  .lede {
+    margin-top: var(--s-4);
+  }
+  .extra {
+    margin-top: var(--s-5);
+  }
+</style>

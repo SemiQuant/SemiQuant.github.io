@@ -1,8 +1,15 @@
 ---
+/**
+ * Page shell: head metadata, skip link, Nav, <main id="main">, Footer.
+ * Usage: <Base title="Publications" description="..."> page content </Base>
+ * Put page content inside .wrap (or use PageHeader, which wraps itself).
+ */
 import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import '../styles/global.css';
 import Seo from '../components/seo/Seo.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
 import { profile } from '../data/profile';
 
 interface Props {
@@ -34,19 +41,34 @@ const fullTitle = title ? `${title} | ${profile.shortName}` : `${profile.name} |
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
+    <!-- Dark is the default theme; the script below swaps this for the light value. -->
+    <meta name="theme-color" content="#0b0d10" data-dark="#0b0d10" data-light="#faf9f6" />
     <Seo title={fullTitle} description={description} image={image} type={type} jsonLd={jsonLd} noindex={noindex} />
     <script is:inline>
+      document.documentElement.classList.add('js');
       try {
         var t = localStorage.getItem('theme');
         if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
       } catch (e) {}
+      (function () {
+        var m = document.querySelector('meta[name="theme-color"]');
+        if (m && document.documentElement.dataset.theme === 'light') m.content = m.dataset.light;
+      })();
     </script>
     <slot name="head" />
   </head>
   <body>
-    <a class="visually-hidden" href="#main">Skip to content</a>
-    <main id="main">
+    <a class="skip-link" href="#main">Skip to content</a>
+    <Nav />
+    <main id="main" tabindex="-1">
       <slot />
     </main>
+    <Footer />
   </body>
 </html>
+
+<style is:global>
+  main:focus {
+    outline: none;
+  }
+</style>

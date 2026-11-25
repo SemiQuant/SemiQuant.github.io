@@ -1,0 +1,73 @@
+---
+/**
+ * Row of labeled mono links for a project's `links` object
+ * (repo, web, pypi, bioconda, paper, protocol, video, appstore).
+ * Renders nothing when the object is empty.
+ * Usage: <ExternalLinks links={project.data.links} />
+ */
+interface Props {
+  links: Partial<Record<'repo' | 'web' | 'pypi' | 'bioconda' | 'paper' | 'protocol' | 'video' | 'appstore', string>>;
+  /** Accessible name for the list. */
+  label?: string;
+}
+
+const { links, label = 'Links' } = Astro.props;
+
+const ORDER = [
+  ['web', 'Web app'],
+  ['repo', 'Repo'],
+  ['pypi', 'PyPI'],
+  ['bioconda', 'Bioconda'],
+  ['paper', 'Paper'],
+  ['protocol', 'Protocol'],
+  ['video', 'Video'],
+  ['appstore', 'App Store'],
+] as const;
+
+const items = ORDER.flatMap(([key, text]) => (links?.[key] ? [{ key, text, url: links[key] as string }] : []));
+---
+
+{
+  items.length > 0 && (
+    <ul class="ext-links" aria-label={label}>
+      {items.map((l) => (
+        <li>
+          <a href={l.url} rel="noopener">
+            {l.text}
+            <span class="arrow" aria-hidden="true">
+              &#8599;
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+<style>
+  .ext-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-1) var(--s-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+  }
+  a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3em;
+    padding-block: 0.2rem;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+  .arrow {
+    font-size: 0.85em;
+    opacity: 0.8;
+  }
+</style>

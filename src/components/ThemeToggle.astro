@@ -1,0 +1,91 @@
+---
+/**
+ * Dark / light switch. Persists to localStorage under "theme" and sets
+ * html[data-theme]. Hidden when JavaScript is off (the site stays dark).
+ * Usage: <ThemeToggle />
+ */
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+---
+
+<button type="button" class:list={['theme-toggle', className]} data-theme-toggle aria-label="Switch to light theme">
+  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
+    <circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.25"></circle>
+    <path class="half" d="M8 2.5a5.5 5.5 0 0 0 0 11z" fill="currentColor"></path>
+  </svg>
+  <span class="state when-dark" aria-hidden="true">Dark</span>
+  <span class="state when-light" aria-hidden="true">Light</span>
+</button>
+
+<style>
+  .theme-toggle {
+    display: none;
+    align-items: center;
+    gap: var(--s-2);
+    height: 2rem;
+    padding: 0 var(--s-2);
+    background: transparent;
+    color: var(--muted);
+    border: var(--hair);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      color var(--dur),
+      border-color var(--dur);
+  }
+  :global(.js) .theme-toggle {
+    display: inline-flex;
+  }
+  .theme-toggle:hover {
+    color: var(--text);
+    border-color: var(--border-strong);
+  }
+  .state {
+    min-width: 5ch;
+    text-align: left;
+  }
+  .when-light,
+  :global(html[data-theme='light']) .when-dark {
+    display: none;
+  }
+  :global(html[data-theme='light']) .when-light {
+    display: inline;
+  }
+  .half {
+    transform-origin: 8px 8px;
+    transition: transform var(--dur);
+  }
+  :global(html[data-theme='light']) .half {
+    transform: rotate(180deg);
+  }
+</style>
+
+<script>
+  const root = document.documentElement;
+  const buttons = document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]');
+  const sync = () => {
+    const next = root.dataset.theme === 'light' ? 'dark' : 'light';
+    buttons.forEach((b) => b.setAttribute('aria-label', `Switch to ${next} theme`));
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (meta) meta.content = (root.dataset.theme === 'light' ? meta.dataset.light : meta.dataset.dark) ?? meta.content;
+  };
+  buttons.forEach((b) =>
+    b.addEventListener('click', () => {
+      const next = root.dataset.theme === 'light' ? 'dark' : 'light';
+      root.dataset.theme = next;
+      try {
+        localStorage.setItem('theme', next);
+      } catch {
+        /* storage blocked: the choice lasts for this page only */
+      }
+      sync();
+    }),
+  );
+  sync();
+</script>

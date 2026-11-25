@@ -1,0 +1,306 @@
+---
+/**
+ * Publication list, newest first, with an optional client-side filter bar.
+ * Usage:
+ *   const pubs = await getCollection('publications');
+ *   <PubList pubs={pubs} filterable />
+ * Subset that keeps the ids of the full list:
+ *   <PubList pubs={featured} numbers={pubNumbers(pubs)} />
+ * Without `numbers`, ids count down from pubs.length (newest = highest).
+ * Without JavaScript the filter bar is hidden and the full list shows.
+ */
+import type { CollectionEntry } from 'astro:content';
+import { pubTypeLabel, sortPubs } from '../lib/format';
+import PubRow from './PubRow.astro';
+
+interface Props {
+  pubs: CollectionEntry<'publications'>[];
+  /** Show the filter bar (role, type, year, search). Default false. */
+  filterable?: boolean;
+  /** Show P-000 ids. Default true. */
+  showIds?: boolean;
+  /** Map of publication id to sample number, from pubNumbers(). */
+  numbers?: Map<string, number>;
+  /** Show the "* joint first author" legend when any row needs it. Default true. */
+  legend?: boolean;
+}
+
+const { pubs, filterable = false, showIds = true, numbers, legend = true } = Astro.props;
+const sorted = sortPubs(pubs);
+const total = sorted.length;
+const numberOf = (id: string, i: number) => numbers?.get(id) ?? total - i;
+
+const types = ['article', 'preprint', 'chapter', 'software'].filter((t) => sorted.some((p) => p.data.type === t));
+const years = [...new Set(sorted.map((p) => p.data.year))].sort((a, b) => b - a);
+const hasJoint = sorted.some((p) => p.data.role === 'joint-first' || p.data.authors.some((a) => /\*\s*$/.test(a)));
+---
+
+<div class="pub-list" data-pub-list>
+  {
+    filterable && total > 0 && (
+      <form class="filters" data-pub-filters aria-label="Filter publications">
+        <fieldset class="seg">
+          <legend class="visually-hidden">Authorship</legend>
+          <label>
+            <input type="radio" name="role" value="all" checked />
+            <span>All</span>
+          </label>
+          <label>
+            <input type="radio" name="role" value="lead" />
+            <span>First or joint first</span>
+          </label>
+        </fieldset>
+
+        {types.length > 1 && (
+          <label class="field">
+            <span class="field-label">Type</span>
+            <select name="type">
+              <option value="all">All</option>
+              {types.map((t) => (
+                <option value={t}>{pubTypeLabel(t)}</option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        {years.length > 1 && (
+          <label class="field">
+            <span class="field-label">Year</span>
+            <select name="year">
+              <option value="all">All</option>
+              {years.map((y) => (
+                <option value={y}>{y}</option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        <label class="field search">
+          <span class="field-label">Search</span>
+          <input type="search" name="q" placeholder="Title, author, journal" autocomplete="off" spellcheck="false" />
+        </label>
+
+        <button type="reset" class="reset">Reset</button>
+      </form>
+    )
+  }
+
+  {
+    total > 0 && (
+      <p class="status-line">
+        <span data-pub-count aria-live="polite">
+          {filterable ? `Showing ${total} of ${total}` : `${total} ${total === 1 ? 'entry' : 'entries'}`}
+        </span>
+        {legend && hasJoint && <span class="legend">* joint first author</span>}
+      </p>
+    )
+  }
+
+  <ol class="rows" reversed={showIds ? true : undefined}>
+    {sorted.map((pub, i) => <PubRow pub={pub} n={numberOf(pub.id, i)} showId={showIds} />)}
+  </ol>
+
+  {total === 0 && <p class="empty">No publications to show yet.</p>}
+  {
+    filterable && (
+      <p class="empty" data-pub-empty hidden>
+        No publications match these filters.
+      </p>
+    )
+  }
+</div>
+
+<style>
+  .filters {
+    display: none;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--s-3) var(--s-4);
+    padding: var(--s-3) var(--s-4);
+    margin-bottom: var(--s-3);
+    background: var(--surface);
+    border: var(--hair);
+    border-radius: var(--radius);
+  }
+  :global(.js) .filters {
+    display: flex;
+  }
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+  .seg {
+    display: inline-flex;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+  }
+  .seg label {
+    position: relative;
+    display: block;
+    cursor: pointer;
+  }
+  .seg label + label {
+    border-left: 1px solid var(--border-strong);
+  }
+  .seg input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .seg span {
+    display: flex;
+    align-items: center;
+    height: calc(2.25rem - 2px);
+    padding: 0 var(--s-3);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .seg input:checked + span {
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+  .seg input:focus-visible + span {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .field {
+    display: grid;
+    gap: 0.3rem;
+  }
+  .field-label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    line-height: 1;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  select,
+  input[type='search'] {
+    height: 2.25rem;
+    padding: 0 var(--s-3);
+    background: var(--bg);
+    color: var(--text);
+    border: var(--hair);
+    border-color: var(--border-strong);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+  }
+  input[type='search'] {
+    width: 100%;
+    font-size: var(--fs-sm);
+  }
+  input::placeholder {
+    color: var(--faint);
+    opacity: 1;
+  }
+  .search {
+    flex: 1 1 14rem;
+    min-width: 0;
+  }
+  .reset {
+    height: 2.25rem;
+    padding: 0 var(--s-3);
+    background: transparent;
+    color: var(--muted);
+    border: 0;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+  }
+  .reset:hover {
+    color: var(--text);
+  }
+  @media (max-width: 639.98px) {
+    .seg {
+      width: 100%;
+    }
+    .seg label {
+      flex: 1;
+    }
+    .seg span {
+      justify-content: center;
+    }
+    .field:not(.search) {
+      flex: 1 1 6rem;
+    }
+  }
+  .status-line {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--s-1) var(--s-4);
+    padding-block: var(--s-2);
+    border-bottom: 1px solid var(--border-strong);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+  }
+  .legend {
+    color: var(--faint);
+  }
+  .rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .empty {
+    padding-block: var(--s-5);
+    font-size: var(--fs-sm);
+    color: var(--muted);
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-pub-list]').forEach((root) => {
+    const form = root.querySelector<HTMLFormElement>('[data-pub-filters]');
+    if (!form) return;
+    const rows = Array.from(root.querySelectorAll<HTMLElement>('[data-pub]'));
+    const count = root.querySelector<HTMLElement>('[data-pub-count]');
+    const empty = root.querySelector<HTMLElement>('[data-pub-empty]');
+
+    const apply = () => {
+      const fd = new FormData(form);
+      const role = fd.get('role') ?? 'all';
+      const type = fd.get('type') ?? 'all';
+      const year = fd.get('year') ?? 'all';
+      const terms = String(fd.get('q') ?? '')
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(Boolean);
+      let shown = 0;
+      for (const row of rows) {
+        const ok =
+          (role === 'all' || row.dataset.role !== 'middle') &&
+          (type === 'all' || row.dataset.type === type) &&
+          (year === 'all' || row.dataset.year === year) &&
+          terms.every((t) => (row.dataset.text ?? '').includes(t));
+        row.hidden = !ok;
+        if (ok) shown++;
+      }
+      if (count) count.textContent = `Showing ${shown} of ${rows.length}`;
+      if (empty) empty.hidden = shown > 0;
+    };
+
+    form.addEventListener('input', apply);
+    form.addEventListener('change', apply);
+    form.addEventListener('submit', (e) => e.preventDefault());
+    form.addEventListener('reset', () => setTimeout(apply));
+    apply();
+  });
+</script>

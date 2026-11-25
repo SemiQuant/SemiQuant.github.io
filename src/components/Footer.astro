@@ -1,0 +1,131 @@
+---
+/**
+ * Site footer: email, profile links (rel="me" where set), CV PDF, source
+ * link and the build year. Rendered by layouts/Base.astro.
+ */
+import { profile } from '../data/profile';
+
+interface Props {}
+
+const year = new Date().getFullYear();
+const source = 'https://github.com/SemiQuant/SemiQuant.github.io';
+---
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="cols">
+      <div class="col">
+        <h2 class="label">Contact</h2>
+        <p><a class="email" href={`mailto:${profile.email}`}>{profile.email}</a></p>
+        <p class="where">
+          {profile.affiliation.unit}<br />
+          {profile.affiliation.org}
+        </p>
+      </div>
+
+      <div class="col">
+        <h2 class="label">Profiles</h2>
+        <ul class="links two">
+          {
+            profile.links.map((l) => (
+              <li>
+                <a href={l.url} rel={l.me ? 'me noopener' : 'noopener'}>
+                  {l.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="col">
+        <h2 class="label">Site</h2>
+        <ul class="links">
+          <li><a href={profile.cvPdf}>CV (PDF)</a></li>
+          <li><a href="/did-not-work/">Things that did not work</a></li>
+          <li><a href={source} rel="noopener">Site source</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="fine">
+      <span>&copy; {year} {profile.name}</span>
+      <span class="brand">{profile.brand}</span>
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: var(--s-8);
+    border-top: var(--hair);
+    background: var(--surface);
+    font-size: var(--fs-sm);
+    color: var(--muted);
+  }
+  .cols {
+    display: grid;
+    gap: var(--s-6);
+    padding-block: var(--s-7) var(--s-6);
+  }
+  @media (min-width: 640px) {
+    .cols {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 960px) {
+    .cols {
+      grid-template-columns: 5fr 4fr 3fr;
+      gap: var(--s-7);
+    }
+  }
+  .label {
+    margin-bottom: var(--s-3);
+    font-size: var(--fs-2xs);
+    color: var(--faint);
+  }
+  .email {
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+    overflow-wrap: anywhere;
+  }
+  .where {
+    margin-top: var(--s-3);
+    line-height: 1.5;
+  }
+  .links {
+    display: grid;
+    gap: var(--s-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .links.two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--s-4);
+  }
+  .links a {
+    color: var(--text);
+    text-decoration: none;
+  }
+  .links a:hover {
+    color: var(--accent-text);
+    text-decoration: underline;
+  }
+  .fine {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--s-2) var(--s-4);
+    padding-block: var(--s-4);
+    border-top: var(--hair);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: 0.04em;
+    color: var(--faint);
+  }
+  .brand {
+    text-transform: uppercase;
+    letter-spacing: var(--track-caps);
+  }
+</style>

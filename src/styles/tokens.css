@@ -3,12 +3,12 @@
   color-scheme: dark;
 
   --bg: #0b0d10;
-  --surface: #12151a;
-  --surface-2: #1a1e25;
+  --surface: #111418;
+  --surface-2: #181c22;
   --text: #e6e8eb;
   --muted: #9aa3af;
   --faint: #7d8794;
-  --border: #2a303a;
+  --border: #262b34;
   --border-strong: #647082;
 
   /* Orange from the SQ mark. --accent-text is the only orange safe for text. */
@@ -23,9 +23,16 @@
   --warn: #f2c14e;
   --idle: #7d8794;
 
+  /* Chart and rule furniture. */
+  --grid: rgb(154 163 175 / 0.1);
+  --grid-strong: rgb(154 163 175 / 0.2);
+  --tick: #3a424e;
+  --scrim: rgb(5 6 8 / 0.95);
+
   --font-sans: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
+  --fs-2xs: 0.6875rem;
   --fs-xs: 0.75rem;
   --fs-sm: 0.875rem;
   --fs-base: 1rem;
@@ -35,7 +42,10 @@
   --fs-2xl: clamp(2.1rem, 1.3rem + 3.6vw, 4rem);
 
   --lh-tight: 1.15;
+  --lh-snug: 1.35;
   --lh-body: 1.6;
+
+  --track-caps: 0.08em; /* letter spacing for mono caps labels */
 
   --s-1: 0.25rem;
   --s-2: 0.5rem;
@@ -53,6 +63,7 @@
   --radius: 2px;
   --hair: 1px solid var(--border);
   --dur: 150ms;
+  --nav-h: 3.5rem;
 }
 
 :root[data-theme='light'] {
@@ -73,4 +84,9 @@
   --ok: #1c7a4d;
   --warn: #8a6100;
   --idle: #6b665c;
+
+  --grid: rgb(22 24 28 / 0.07);
+  --grid-strong: rgb(22 24 28 / 0.16);
+  --tick: #bdb9b0;
+  --scrim: rgb(12 13 16 / 0.95);
 }

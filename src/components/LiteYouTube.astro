@@ -1,0 +1,118 @@
+---
+/**
+ * YouTube facade. Shows a thumbnail (from i.ytimg.com) that links to the
+ * video; on click it is replaced by the www.youtube-nocookie.com player, so
+ * nothing loads from YouTube's player until the visitor asks for it.
+ * Without JavaScript the link opens the video on YouTube.
+ * Usage: <LiteYouTube id="VIDEO_ID" title="What the video shows" />
+ */
+interface Props {
+  id: string;
+  title: string;
+}
+
+const { id, title } = Astro.props;
+const safeId = encodeURIComponent(id);
+---
+
+<figure class="yt">
+  <a class="frame" href={`https://www.youtube.com/watch?v=${safeId}`} rel="noopener" data-yt={safeId} data-title={title}>
+    <img
+      src={`https://i.ytimg.com/vi/${safeId}/hqdefault.jpg`}
+      alt=""
+      width="480"
+      height="360"
+      loading="lazy"
+      decoding="async"
+      referrerpolicy="no-referrer"
+    />
+    <span class="play" aria-hidden="true">
+      <svg viewBox="0 0 16 16" width="16" height="16"><path d="M4 2.5v11l9-5.5z" fill="currentColor"></path></svg>
+    </span>
+    <span class="visually-hidden">Play video: {title}</span>
+  </a>
+  <figcaption>
+    <span class="tag" aria-hidden="true">Video</span>
+    <span>{title}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .yt {
+    margin: 0;
+  }
+  .frame {
+    position: relative;
+    display: block;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    background: #000;
+    border: var(--hair);
+    border-radius: var(--radius);
+  }
+  .frame img,
+  .frame :global(iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .frame img {
+    object-fit: cover;
+    opacity: 0.85;
+    transition: opacity var(--dur);
+  }
+  .frame:hover img {
+    opacity: 1;
+  }
+  .play {
+    position: absolute;
+    left: var(--s-3);
+    bottom: var(--s-3);
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-radius: var(--radius);
+  }
+  figcaption {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-2);
+    margin-top: var(--s-2);
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .tag {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+</style>
+
+<script>
+  document.querySelectorAll<HTMLAnchorElement>('a[data-yt]').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube-nocookie.com/embed/${link.dataset.yt}?autoplay=1&rel=0`;
+      iframe.title = link.dataset.title ?? 'Video';
+      iframe.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+      iframe.allowFullscreen = true;
+      iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+      const frame = document.createElement('div');
+      frame.className = link.className;
+      frame.appendChild(iframe);
+      link.replaceWith(frame);
+      iframe.focus();
+    });
+  });
+</script>

@@ -1,0 +1,192 @@
+---
+/**
+ * One publication as a list item. Use inside PubList, or directly in your
+ * own <ol>/<ul>:
+ *   <ol class="pub-rows"><PubRow pub={pub} n={36} /></ol>
+ * n is the sample number: with showId it prints as "P-036".
+ * Title *asterisks* become italics; everything else is escaped.
+ * The site owner is emphasized in the author list. Joint first authors are
+ * marked with an asterisk: with role "joint-first", every author up to and
+ * including the owner, plus any author whose name ends in "*" in the data.
+ */
+import type { CollectionEntry } from 'astro:content';
+import { doiUrl, escapeHtml, isOwner, mdInlineToHtml, mdInlineToText, pmidUrl, pubLabel, pubTypeLabel } from '../lib/format';
+
+interface Props {
+  pub: CollectionEntry<'publications'>;
+  n: number;
+  /** Show the P-000 id column. Default true. */
+  showId?: boolean;
+}
+
+const { pub, n, showId = true } = Astro.props;
+const d = pub.data;
+
+// Joint first authors lead the list, so with role "joint-first" everyone up to
+// and including the owner shares first authorship.
+const ownerIndex = d.authors.findIndex((a) => isOwner(a));
+const authors = d.authors.map((raw, i) => {
+  const marked = /\*\s*$/.test(raw);
+  const name = raw.replace(/\*\s*$/, '').trim();
+  const owner = isOwner(name);
+  return { name, owner, joint: marked || (d.role === 'joint-first' && ownerIndex >= 0 && i <= ownerIndex) };
+});
+
+const authorsHtml = authors
+  .map(
+    (a) =>
+      (a.owner ? `<strong>${escapeHtml(a.name)}</strong>` : escapeHtml(a.name)) +
+      (a.joint ? '<span aria-hidden="true">*</span><span class="visually-hidden"> (joint first author)</span>' : ''),
+  )
+  .join(', ');
+
+const searchText = [mdInlineToText(d.title), d.authors.join(' '), d.journal ?? '', String(d.year), ...(d.tags ?? [])]
+  .join(' ')
+  .toLowerCase();
+---
+
+<li
+  class:list={['pub', { 'with-id': showId }]}
+  data-pub
+  data-role={d.role}
+  data-type={d.type}
+  data-year={d.year}
+  data-text={searchText}
+>
+  {showId && <span class="id">{pubLabel(n)}</span>}
+  <div class="main">
+    <p class="title">
+      <span set:html={mdInlineToHtml(d.title)} />
+      {d.type !== 'article' && <span class="badge">{pubTypeLabel(d.type)}</span>}
+    </p>
+    <p class="authors" set:html={authorsHtml} />
+    <p class="source">
+      {d.journal && <cite>{d.journal}</cite>}
+      <span class="num">{d.year}</span>
+      {d.citation && <span class="num">{d.citation}</span>}
+    </p>
+    {
+      (d.doi || d.pmid || d.url) && (
+        <p class="ids">
+          {d.doi && (
+            <a href={doiUrl(d.doi)} rel="noopener">
+              <span class="k">DOI</span> {d.doi}
+            </a>
+          )}
+          {d.pmid && (
+            <a href={pmidUrl(d.pmid)} rel="noopener">
+              <span class="k">PMID</span> {d.pmid}
+            </a>
+          )}
+          {!d.doi && !d.pmid && d.url && (
+            <a href={d.url} rel="noopener">
+              <span class="k">Link</span> {new URL(d.url).hostname.replace(/^www\./, '')}
+            </a>
+          )}
+        </p>
+      )
+    }
+  </div>
+</li>
+
+<style>
+  .pub {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-1) var(--s-5);
+    padding-block: var(--s-4);
+    border-bottom: var(--hair);
+  }
+  .id {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    line-height: 1.6;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    color: var(--faint);
+    white-space: nowrap;
+  }
+  @media (min-width: 640px) {
+    .pub.with-id {
+      grid-template-columns: 4.25rem minmax(0, 1fr);
+    }
+    .id {
+      padding-top: 0.15rem;
+    }
+  }
+  .main {
+    display: grid;
+    gap: 0.3rem;
+    max-width: 52rem;
+  }
+  .title {
+    font-size: var(--fs-base);
+    font-weight: 560;
+    line-height: 1.4;
+    letter-spacing: -0.005em;
+    color: var(--text);
+  }
+  .badge {
+    display: inline-block;
+    margin-left: 0.4em;
+    padding: 0.1rem 0.4rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--muted);
+    vertical-align: 0.1em;
+    white-space: nowrap;
+  }
+  .authors {
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .authors :global(strong) {
+    color: var(--text);
+    font-weight: 620;
+  }
+  .source {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--s-3);
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  cite {
+    font-style: italic;
+    color: var(--text);
+  }
+  .num {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-variant-numeric: tabular-nums;
+  }
+  .ids {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--s-4);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    line-height: 1.6;
+    font-variant-numeric: tabular-nums;
+  }
+  .ids a {
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+  .ids a:hover {
+    text-decoration: underline;
+  }
+  .k {
+    color: var(--faint);
+    letter-spacing: 0.04em;
+  }
+</style>

@@ -1,0 +1,164 @@
+---
+/**
+ * Wrapper that styles rendered Markdown (headings, lists, links, code,
+ * blockquotes, figures, tables) at the 68ch reading measure.
+ * Usage:
+ *   const { Content } = await render(entry);
+ *   <Prose><Content /></Prose>
+ * Pass wide to drop the measure limit.
+ */
+interface Props {
+  wide?: boolean;
+  class?: string;
+}
+
+const { wide = false, class: className } = Astro.props;
+---
+
+<div class:list={['prose', { wide }, className]}><slot /></div>
+
+<style is:global>
+  .prose {
+    max-width: var(--measure);
+    font-size: var(--fs-base);
+    line-height: var(--lh-body);
+  }
+  .prose.wide {
+    max-width: none;
+  }
+  .prose > * + * {
+    margin-top: var(--s-4);
+  }
+  .prose > :first-child {
+    margin-top: 0;
+  }
+  .prose h2 {
+    margin-top: var(--s-7);
+    font-size: var(--fs-lg);
+    letter-spacing: -0.015em;
+  }
+  .prose h3 {
+    margin-top: var(--s-6);
+    font-size: var(--fs-md);
+    line-height: var(--lh-snug);
+  }
+  .prose h4 {
+    margin-top: var(--s-5);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .prose h2 + *,
+  .prose h3 + *,
+  .prose h4 + * {
+    margin-top: var(--s-3);
+  }
+  .prose ul,
+  .prose ol {
+    padding-left: 1.25rem;
+  }
+  .prose li + li,
+  .prose li > ul,
+  .prose li > ol {
+    margin-top: var(--s-2);
+  }
+  .prose ul > li::marker {
+    color: var(--faint);
+  }
+  .prose ol > li::marker {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--muted);
+  }
+  .prose a {
+    color: var(--accent-text);
+  }
+  .prose strong {
+    color: var(--text);
+  }
+  .prose :not(pre) > code {
+    padding: 0.1em 0.35em;
+    background: var(--surface-2);
+    border: var(--hair);
+    border-radius: var(--radius);
+    font-size: 0.85em;
+    overflow-wrap: anywhere;
+  }
+  .prose pre {
+    padding: var(--s-4);
+    background: var(--surface) !important;
+    border: var(--hair);
+    border-radius: var(--radius);
+    font-size: var(--fs-sm);
+    line-height: 1.55;
+    overflow-x: auto;
+    tab-size: 2;
+  }
+  :root[data-theme='light'] .prose pre,
+  :root[data-theme='light'] .prose pre span {
+    color: var(--text) !important;
+  }
+  .prose blockquote {
+    padding-left: var(--s-4);
+    border-left: 2px solid var(--accent);
+    color: var(--muted);
+  }
+  .prose blockquote > * + * {
+    margin-top: var(--s-3);
+  }
+  .prose hr {
+    margin-block: var(--s-6);
+    border: 0;
+    border-top: var(--hair);
+  }
+  .prose img,
+  .prose video {
+    border: var(--hair);
+    border-radius: var(--radius);
+  }
+  .prose figure {
+    margin-block: var(--s-5);
+  }
+  .prose figcaption {
+    margin-top: var(--s-2);
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+    color: var(--muted);
+  }
+  .prose table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: var(--fs-sm);
+    font-variant-numeric: tabular-nums;
+  }
+  .prose th,
+  .prose td {
+    padding: var(--s-2) var(--s-3);
+    border-bottom: var(--hair);
+    text-align: left;
+    vertical-align: top;
+  }
+  .prose th {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    font-weight: 500;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom-color: var(--border-strong);
+    white-space: nowrap;
+  }
+  .prose kbd {
+    padding: 0.05em 0.35em;
+    border: var(--hair);
+    border-bottom-width: 2px;
+    border-radius: var(--radius);
+    font-size: 0.8em;
+  }
+</style>

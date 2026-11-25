@@ -1,0 +1,110 @@
+---
+/**
+ * Instrument-readout strip: large mono numerals with small caps labels.
+ * Usage:
+ *   <StatStrip stamp="as of 2026-10" stats={[
+ *     { value: 36, label: 'Publications' },
+ *     { value: '1,507', label: 'Citations' },
+ *     { value: 30, unit: 'USD', label: 'Build cost' },
+ *   ]} />
+ * Values are shown as given: format numbers before passing them in.
+ */
+interface Props {
+  stats: { value: string | number; label: string; unit?: string }[];
+  /** Small note in the corner, e.g. "as of 2026-10". */
+  stamp?: string;
+  /** Accessible name for the group. */
+  label?: string;
+}
+
+const { stats, stamp, label = 'Key figures' } = Astro.props;
+---
+
+{
+  stats.length > 0 && (
+    <div class="stat-strip" role="group" aria-label={label}>
+      <dl style={`--c-sm:${stats.length === 4 ? 2 : Math.min(stats.length, 3)};--c-lg:${Math.min(stats.length, 6)}`}>
+        {stats.map((s) => (
+          <div class="cell">
+            <dt>{s.label}</dt>
+            <dd>
+              <span class="value">{s.value}</span>
+              {s.unit && <span class="unit">{s.unit}</span>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      {stamp && <p class="stamp">{stamp}</p>}
+    </div>
+  )
+}
+
+<style>
+  .stat-strip {
+    border-top: 1px solid var(--border-strong);
+  }
+  dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+    border-left: var(--hair);
+  }
+  @media (min-width: 640px) {
+    dl {
+      grid-template-columns: repeat(var(--c-sm), minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 960px) {
+    dl {
+      grid-template-columns: repeat(var(--c-lg), minmax(0, 1fr));
+    }
+  }
+  .cell {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    gap: var(--s-2);
+    padding: var(--s-4) var(--s-4) var(--s-3);
+    border-right: var(--hair);
+    border-bottom: var(--hair);
+    min-width: 0;
+  }
+  dt {
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    line-height: 1.3;
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  dd {
+    display: flex;
+    align-items: baseline;
+    gap: var(--s-2);
+    margin: 0;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .value {
+    font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.5rem);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+  .unit {
+    font-size: var(--fs-xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+  .stamp {
+    margin-top: var(--s-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-2xs);
+    letter-spacing: var(--track-caps);
+    text-transform: uppercase;
+    text-align: right;
+    color: var(--faint);
+  }
+</style>

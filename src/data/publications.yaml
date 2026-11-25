@@ -1,10 +1,457 @@
+# Publications. Generated from the CV by scripts/extract-cv.mjs, then checked
+# against Crossref and PubMed by scripts/enrich-pubs.mjs.
+# Add a paper with: node scripts/add-pub.mjs <doi>
+# Titles are verbatim; *asterisks* mark italics (species and gene names).
+# ids are referenced from src/content: do not rename them.
+
+- id: williams-2026-deeplex
+  type: article
+  title: Evaluation of the GenoScreen Deeplex Myc-TB workflow for drug-resistant tuberculosis testing in South Africa
+  authors: [Williams J, Steyn J, Grobbelaar M, Naufal F, Ghebrekristos Y, Ismail N, Limberis J, Opperman C, Singh S, Venter R, Mann BC, Hunter FB, Nalyvayko A, Theron G, Warren RM, Metcalfe JZ]
+  role: middle
+  journal: Front Public Health
+  year: 2026
+  citation: 14:1834699
+  doi: 10.3389/fpubh.2026.1834699
+  pmid: "42483057"
+  tags: [methods, diagnostics, drug-resistance, genomics]
+
+- id: zheng-2026-ifng
+  type: article
+  title: Impaired IFN-γ responsiveness of monocyte-derived lung cells limits immunity to *Mycobacterium tuberculosis*
+  authors: [Zheng W, Limberis JD, Howard ZP, Mohapatra A, Takagi E, Ernst JD]
+  role: middle
+  journal: Nat Commun
+  year: 2026
+  citation: 17(1):8131
+  doi: 10.1038/s41467-026-75096-4
+  pmid: "42373669"
+  tags: [immunology]
+
+- id: steyn-2026-bedaquiline
+  type: article
+  title: "Bedaquiline resistance in patients with Xpert MTB/RIF Ultra-tested rifampicin-resistant tuberculosis in the Western Cape, South Africa: a prospective study"
+  authors: [Steyn J, Williams J, Naufal F, Limberis J, Grobbelaar M, Ismail N, Ghebrekristos Y, Opperman CJ, Nalyvayko A, Singh S, Colman RE, Rodwell TC, Theron G, Warren RM, Metcalfe JZ]
+  role: middle
+  journal: Lancet Microbe
+  year: 2026
+  citation: 7(3):101293
+  doi: 10.1016/j.lanmic.2025.101293
+  pmid: "41724179"
+  tags: [diagnostics, drug-resistance, clinical]
+
+- id: limberis-2025-countfu
+  type: article
+  title: "CountFU: ditching CFUs for qPCR enumeration of *Mycobacterium tuberculosis* and a call to join the revolution"
+  authors: [Limberis JD, Nalyvayko A, Mohapatra A, Bouzeyen R, Howard Z, Zheng W, Metcalfe JZ]
+  role: first
+  journal: Tuberculosis (Edinb)
+  year: 2025
+  citation: 155:102709
+  doi: 10.1016/j.tube.2025.102709
+  pmid: "41273880"
+  tags: [methods]
+  featured: true
+
+- id: limberis-2025-beadbeating-jove
+  type: article
+  title: Mycobacterial DNA extraction using bead beating in custom buffer followed by NGS workflow
+  authors: [Limberis JD, Nalyvayko A, Steyn J, Williams J, Grobbelaar M, Warren RM, Metcalfe JZ]
+  role: first
+  journal: J Vis Exp
+  year: 2025
+  citation: (220)
+  doi: 10.3791/68037
+  pmid: "40587400"
+  tags: [methods, genomics]
+
+- id: williams-2025-matrix-extraction
+  type: article
+  title: Matrix-based DNA extraction for targeted next-generation sequencing on decontaminated sputum samples
+  authors: [Williams J, Steyn J, Conceição EC, Wells FB, Grobbelaar M, Ismail N, Ghebrekristos Y, Opperman CJ, Singh S, Limberis J, Naufal F, Mann BC, Colman RE, Rodwell T, Warren RM, Metcalfe JZ]
+  role: middle
+  journal: J Vis Exp
+  year: 2025
+  citation: (220)
+  doi: 10.3791/68147
+  pmid: "40549675"
+  tags: [methods, genomics]
+
+- id: limberis-2025-uradime
+  type: preprint
+  title: "URAdime: a tool for analyzing primer sequences in sequencing data to identify dimers and super-amplicons"
+  authors: [Limberis JD, Metcalfe JZ]
+  role: first
+  journal: bioRxiv
+  year: 2025
+  doi: 10.1101/2025.01.25.634870
+  pmid: "39975389"
+  tags: [genomics, bioinformatics]
+
+- id: limberis-2024-spotpcr
+  type: preprint
+  title: "spotPCR: a rapid and efficient approach for indexing individual template molecules using unique molecular identifiers"
+  authors: [Limberis JD, Nagel RJ, Chakravorty S, Block D, Dewell S, Nalyvayko A, Metcalfe JZ]
+  role: first
+  journal: bioRxiv
+  year: 2024
+  doi: 10.1101/2024.12.11.627791
+  pmid: "39713367"
+  tags: [methods]
+
+- id: limberis-2024-stilpcr
+  type: article
+  title: stilPCR increases the effective sequencing length of Illumina targeted next-generation sequencing
+  authors: [Limberis JD, Nagel RJ, Chakravorty S, Block D, Dewell S, Nalyvayko A, Howard Z, Theron G, Venter R, Metcalfe JZ]
+  role: first
+  journal: PLoS One
+  year: 2024
+  citation: 19(12):e0314265
+  doi: 10.1371/journal.pone.0314265
+  pmid: "39652558"
+  tags: [methods, genomics]
+  featured: true
+
+- id: limberis-2024-cartridge
+  type: article
+  title: Cartridge-based sequencing for bedaquiline resistance detection from sputum
+  authors: [Limberis JD, Nagel RJ, Block D, Colman RE, Nalyvayko A, Howard Z, Dewell S, Chakravorty S, Metcalfe JZ]
+  role: first
+  journal: IJTLD Open
+  year: 2024
+  citation: 1(9):422–424
+  doi: 10.5588/ijtldopen.24.0124
+  pmid: "39301130"
+  tags: [diagnostics, drug-resistance, genomics, hardware]
+
 - id: limberis-2024-turbolysis
   type: article
-  title: "turboLysis: a low-cost, small-footprint alternative to commercial bead beaters for cell lysis."
+  title: "turboLysis: a low-cost, small-footprint alternative to commercial bead beaters for cell lysis"
   authors: [Limberis JD, Metcalfe JZ]
   role: first
   journal: HardwareX
   year: 2024
-  citation: "19:e00576"
+  citation: 19:e00576
   doi: 10.1016/j.ohx.2024.e00576
   pmid: "39280234"
+  tags: [methods, hardware]
+  featured: true
+
+- id: zheng-2024-lysosome-poor
+  type: article
+  title: "*Mycobacterium tuberculosis* resides in lysosome-poor monocyte-derived lung cells during chronic infection"
+  authors: [Zheng W, Chang IC, Limberis J, Budzik JM, Zha BS, Howard Z, Chen L, Ernst JD]
+  role: middle
+  journal: PLoS Pathog
+  year: 2024
+  citation: 20(5):e1012205
+  doi: 10.1371/journal.ppat.1012205
+  pmid: "38701094"
+  tags: [immunology]
+
+- id: jaumdally-2024-sars-cov-2-bioaerosols
+  type: article
+  title: Frequency, kinetics and determinants of viable SARS-CoV-2 in bioaerosols from ambulatory COVID-19 patients infected with the Beta, Delta or Omicron variants
+  authors: [Jaumdally S, Tomasicchio M, Pooran A, Esmail A, Kotze A, Meier S, Wilson L, Oelofse S, van der Merwe C, Roomaney A, Davids M, Suliman T, Joseph R, Perumal T, Scott A, Shaw M, Preiser W, Williamson C, Goga A, Mayne E, Gray G, Moore P, Sigal A, Limberis JD, Metcalfe J, Dheda K]
+  role: middle
+  journal: Nat Commun
+  year: 2024
+  citation: 15(1):2003
+  doi: 10.1038/s41467-024-45400-1
+  pmid: "38443359"
+  tags: [clinical, transmission, covid]
+
+- id: limberis-2023-primerjinn
+  type: article
+  title: "primerJinn: a tool for rationally designing multiplex PCR primer sets for amplicon sequencing and performing *in silico* PCR"
+  authors: [Limberis JD, Metcalfe JZ]
+  role: first
+  journal: BMC Bioinformatics
+  year: 2023
+  citation: 24(1):468
+  doi: 10.1186/s12859-023-05609-1
+  pmid: "38082220"
+  tags: [genomics, bioinformatics]
+  featured: true
+
+- id: derendinger-2023-bedaquiline
+  type: article
+  title: "Bedaquiline resistance in patients with drug-resistant tuberculosis in Cape Town, South Africa: a retrospective longitudinal cohort study"
+  authors: [Derendinger B, Dippenaar A, de Vos M, Huo S, Alberts R, Tadokera R, Limberis J, Sirgel F, Dolby T, Spies C, et al.]
+  role: middle
+  journal: Lancet Microbe
+  year: 2023
+  citation: 4(12):e972–e982
+  doi: 10.1016/S2666-5247(23)00172-6
+  pmid: "37931638"
+  tags: [drug-resistance, clinical]
+
+- id: limberis-2023-selseq
+  type: article
+  title: "selSeq: a method for the enrichment of non-polyadenylated RNAs including enhancer and long non-coding RNAs for sequencing"
+  authors: [Limberis JD, Nalyvayko A, Ernst JD, Metcalfe JZ]
+  role: first
+  journal: PLoS One
+  year: 2023
+  citation: 18(11):e0289442
+  doi: 10.1371/journal.pone.0289442
+  pmid: "38015898"
+  tags: [methods, genomics, transcriptomics]
+
+- id: limberis-2023-hisspcr
+  type: article
+  title: A simple, single-tube overlapping amplicon-targeted Illumina sequencing assay
+  authors: [Limberis JD, Nalyvayko A, Ernst JD, Metcalfe JZ]
+  role: first
+  journal: PLoS One
+  year: 2023
+  citation: 18(9):e0288687
+  doi: 10.1371/journal.pone.0288687
+  pmid: "37708184"
+  tags: [methods, genomics]
+
+- id: limberis-2023-rv0678
+  type: article
+  title: Circularization of *rv0678* for genotypic bedaquiline resistance testing of *Mycobacterium tuberculosis*
+  authors: [Limberis JD, Nalyvayko A, Ernst JD, Metcalfe JZ]
+  role: first
+  journal: Microbiol Spectr
+  year: 2023
+  citation: 11(2):e0412722
+  doi: 10.1128/spectrum.04127-22
+  pmid: "36877083"
+  tags: [methods, diagnostics, drug-resistance, genomics]
+
+- id: georghiou-2022-susceptibility
+  type: article
+  title: "Updating the approaches to define susceptibility and resistance to anti-tuberculosis agents: implications for diagnosis and treatment"
+  authors: [Georghiou SB, Rodwell TC, Korobitsyn A, Abbadi SH, Ajbani K, Alffenaar JW, Alland D, …, Limberis JD, et al.]
+  role: middle
+  journal: Eur Respir J
+  year: 2022
+  citation: 59(4)
+  doi: 10.1183/13993003.00166-2022
+  pmid: "35422426"
+  tags: [diagnostics, drug-resistance]
+
+- id: whitfield-2022-pyrazinamide
+  type: article
+  title: Comparative performance of genomic methods for the detection of pyrazinamide resistance and heteroresistance in *Mycobacterium tuberculosis*
+  authors: [Whitfield MG, Engelthaler DM, Allender C, Folkerts M, Heupink TH, Limberis J, Warren RM, Van Rie A, Metcalfe JZ]
+  role: middle
+  journal: J Clin Microbiol
+  year: 2022
+  citation: 60(1):e0190721
+  doi: 10.1128/JCM.01907-21
+  pmid: "34757831"
+  tags: [diagnostics, drug-resistance, genomics]
+
+- id: ismail-2021-bedaquiline-variants
+  type: article
+  title: "Genetic variants and their association with phenotypic resistance to bedaquiline in *Mycobacterium tuberculosis*: a systematic review and individual isolate data analysis"
+  authors: [Ismail N, Rivière E, Limberis J, Huo S, Metcalfe JZ, Warren RM, Van Rie A]
+  role: middle
+  journal: Lancet Microbe
+  year: 2021
+  citation: 2(11):e604–e616
+  doi: 10.1016/S2666-5247(21)00175-0
+  pmid: "34796339"
+  tags: [drug-resistance, genomics]
+
+- id: naidoo-2021-gut-microbiota
+  type: article
+  title: Anaerobe-enriched gut microbiota predicts pro-inflammatory responses in pulmonary tuberculosis
+  authors: [Naidoo CC, Nyawo GR, Sulaiman I, Wu BG, Turner CT, Bu K, Palmer Z, Li Y, Reeve BWP, Moodley S, Jackson JG, Limberis J, Diacon AH, van Helden PD, Clemente JC, Warren RM, Noursadeghi M, Segal LN, Theron G]
+  role: middle
+  journal: EBioMedicine
+  year: 2021
+  citation: 67:103374
+  doi: 10.1016/j.ebiom.2021.103374
+  pmid: "33975252"
+  tags: [immunology]
+
+- id: limberis-2021-textbook
+  type: chapter
+  title: Textbook of Tuberculosis and Non-tuberculous Mycobacterial Diseases
+  authors: [Contributing author]
+  role: middle
+  journal: Medknow
+  year: 2021
+  tags: []
+
+- id: rudd-2020-pipeline-umi-amplicon
+  type: software
+  title: "pipeline-umi-amplicon: a pipeline for generating high-accuracy single-molecule reads using unique molecular identifiers (UMIs) from ONT nanopore amplicon sequence data"
+  authors: [Rudd S, Limberis JD, Rescheneder P]
+  role: middle
+  year: 2020
+  url: https://github.com/SemiQuant/pipeline-umi-amplicon
+  tags: [genomics, bioinformatics]
+
+- id: theron-2020-cough-aerosol
+  type: article
+  title: Bacterial and host determinants of cough aerosol culture positivity in patients with drug-resistant versus drug-susceptible tuberculosis
+  authors: [Theron G, Limberis J, Venter R, Smith L, Pietersen E, Esmail A, Calligaro G, Te Riele J, de Kock M, van Helden P, Gumbo T, Clark TG, Fennelly K, Warren R, Dheda K]
+  role: middle
+  journal: Nat Med
+  year: 2020
+  citation: 26(9):1435–1443
+  doi: 10.1038/s41591-020-0940-2
+  pmid: "32601338"
+  tags: [drug-resistance, clinical, transmission]
+  featured: true
+
+- id: tomasicchio-2020-rd1-ifng
+  type: article
+  title: Differential RD-1-specific IFN-γ host responses to diverse *Mycobacterium tuberculosis* strains in HIV-uninfected persons may be explained by genotypic variation in the ESX-1 region
+  authors: [Tomasicchio M, Limberis J, van der Merwe R, Jacobson R, Meldau R, Theron G, Nicol M, Warren R, Dheda K]
+  role: middle
+  journal: Int J Infect Dis
+  year: 2020
+  citation: 96:240–243
+  doi: 10.1016/j.ijid.2020.04.053
+  pmid: "32339714"
+  tags: [genomics, clinical, immunology]
+
+- id: davids-2020-lung-challenge
+  type: article
+  title: A human lung challenge model to evaluate the safety and immunogenicity of PPD and live bacillus Calmette-Guérin
+  authors: [Davids M, Pooran A, Hermann C, Mottay L, Thompson F, Cardenas J, Gu J, Koeuth T, Meldau R, Limberis J, Gina P, Srivastava S, Calder B, Esmail A, Tomasicchio M, Blackburn J, Gumbo T, Dheda K]
+  role: middle
+  journal: Am J Respir Crit Care Med
+  year: 2020
+  citation: 201(10):1277–1291
+  doi: 10.1164/rccm.201908-1580OC
+  pmid: "31860339"
+  tags: [methods, clinical, immunology]
+
+- id: klopper-2020-genomic-landscape
+  type: article
+  title: A landscape of genomic alterations at the root of a near-untreatable tuberculosis epidemic
+  authors: [Klopper M, Heupink TH, Hill-Cawthorne G, Streicher EM, Dippenaar A, de Vos M, Abdallah AM, Limberis J, Merker M, Burns S, Niemann S, Dheda K, Posey J, Pain A, Warren RM]
+  role: middle
+  journal: BMC Med
+  year: 2020
+  citation: 18(1):24
+  doi: 10.1186/s12916-019-1487-2
+  pmid: "32014024"
+  tags: [drug-resistance, genomics]
+
+- id: olayanju-2020-bedaquiline-delamanid
+  type: article
+  title: A regimen containing bedaquiline and delamanid compared to bedaquiline in patients with drug-resistant tuberculosis
+  authors: [Olayanju O, Esmail A, Limberis J, Dheda K]
+  role: middle
+  journal: Eur Respir J
+  year: 2020
+  citation: 55(1):1901181
+  doi: 10.1183/13993003.01181-2019
+  pmid: "31619478"
+  tags: [drug-resistance, clinical]
+
+- id: meldau-2019-pleural-tb
+  type: article
+  title: "Same-day tools, including Xpert Ultra and IRISA-TB, for rapid diagnosis of pleural tuberculosis: a prospective observational study"
+  authors: [Meldau R, Randall P, Pooran A, Limberis J, Makambwa E, Dhansay M, Esmail A, Dheda K]
+  role: middle
+  journal: J Clin Microbiol
+  year: 2019
+  citation: 57(9)
+  doi: 10.1128/JCM.00614-19
+  pmid: "31270183"
+  tags: [diagnostics, clinical]
+
+- id: dheda-2019-lancet-commission
+  type: article
+  title: "The Lancet Respiratory Medicine Commission: 2019 update: epidemiology, pathogenesis, transmission, diagnosis, and management of multidrug-resistant and incurable tuberculosis"
+  authors: [Dheda K, Gumbo T, Maartens G, Dooley K, Esmail A, Murray M, Furin J, Nardell E, London L, Lessem E, Limberis J, Theron G, et al.]
+  role: middle
+  journal: Lancet Respir Med
+  year: 2019
+  citation: 7(9):820–826
+  doi: 10.1016/S2213-2600(19)30263-2
+  pmid: "31486393"
+  tags: [diagnostics, drug-resistance, clinical, transmission]
+
+- id: olayanju-2019-linezolid
+  type: article
+  title: Linezolid interruption in patients with fluoroquinolone-resistant tuberculosis receiving a bedaquiline-based treatment regimen
+  authors: [Olayanju O, Esmail A, Limberis J, Gina P, Dheda K]
+  role: middle
+  journal: Int J Infect Dis
+  year: 2019
+  citation: 85:74–79
+  doi: 10.1016/j.ijid.2019.04.028
+  pmid: "31100421"
+  tags: [drug-resistance, clinical]
+
+- id: olayanju-2018-bedaquiline-outcomes
+  type: article
+  title: Long-term bedaquiline-related treatment outcomes in patients with extensively drug-resistant tuberculosis from South Africa
+  authors: [Olayanju O, Limberis J, Esmail A, Oelofse S, Gina P, Pietersen E, Fadul M, Warren R, Dheda K]
+  role: middle
+  journal: Eur Respir J
+  year: 2018
+  citation: 51(5)
+  doi: 10.1183/13993003.00544-2018
+  pmid: "29700106"
+  tags: [drug-resistance, clinical]
+
+- id: dheda-2017-xdr-outcomes
+  type: article
+  title: "Outcomes, infectiousness, and transmission dynamics of patients with extensively drug-resistant tuberculosis and home-discharged patients with programmatically incurable tuberculosis: a prospective cohort study"
+  authors: [Dheda K, Limberis JD, Pietersen E, Phelan J, Esmail A, Lesosky M, Fennelly KP, Te Riele J, Mastrapa B, Streicher EM, Dolby T, Abdallah AM, Ben-Rached F, Simpson J, Smith L, Gumbo T, van Helden P, Sirgel FA, McNerney R, Theron G, Pain A, Clark TG, Warren RM]
+  role: joint-first
+  journal: Lancet Respir Med
+  year: 2017
+  citation: 5(4):269–281
+  doi: 10.1016/S2213-2600(16)30433-7
+  pmid: "28109869"
+  tags: [drug-resistance, clinical, transmission]
+  featured: true
+
+- id: dheda-2016-bedaquiline-controversies
+  type: article
+  title: "Selected questions and controversies about bedaquiline: a view from the field"
+  authors: [Dheda K, Esmail A, Limberis J, Maartens G]
+  role: middle
+  journal: Int J Tuberc Lung Dis
+  year: 2016
+  citation: 20(12):24–32
+  doi: 10.5588/ijtld.16.0065
+  pmid: "28240569"
+  tags: [drug-resistance, clinical]
+
+- id: theron-2016-xpert-previous-tb
+  type: article
+  title: "Xpert MTB/RIF results in patients with previous tuberculosis: can we distinguish true from false positive results?"
+  authors: [Theron G, Venter R, Calligaro G, Smith L, Limberis J, Meldau R, Chanda D, Esmail A, Peter J, Dheda K]
+  role: middle
+  journal: Clin Infect Dis
+  year: 2016
+  citation: 62(8):995–1001
+  doi: 10.1093/cid/civ1223
+  pmid: "26908793"
+  tags: [diagnostics, clinical]
+
+- id: limberis-2023-deeplex-extraction
+  type: preprint
+  title: Initial experiences with *Mycobacterium tuberculosis* DNA extraction for downstream Deeplex Myc-TB targeted deep sequencing in a high burden setting
+  authors: [Limberis JD, Nalyvayko A, Steyn J, Williams J, Grobbelaar M, Warren RM, Metcalfe JZ]
+  role: first
+  journal: medRxiv
+  year: 2023
+  doi: 10.1101/2023.11.22.23296677
+  tags: [methods, diagnostics, genomics]
+  inCv: false
+
+- id: limberis-2025-beadbeating-review
+  type: preprint
+  title: "Beating the gold standard: A review of *Mycobacterium tuberculosis* lysis using bead beating and the need for standardization"
+  authors: [Limberis JD, Metcalfe JZ]
+  role: first
+  journal: bioRxiv
+  year: 2025
+  doi: 10.1101/2025.07.07.663234
+  tags: [methods]
+  inCv: false
