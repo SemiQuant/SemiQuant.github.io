@@ -4,16 +4,18 @@
  * Usage: <Base title="Publications" description="..."> page content </Base>
  * Put page content inside .wrap (or use PageHeader, which wraps itself).
  */
-import '@fontsource-variable/inter';
-import '@fontsource-variable/jetbrains-mono';
+import '@fontsource-variable/roboto';
+import '@fontsource-variable/roboto/wght-italic.css';
+import '@fontsource-variable/montserrat';
+import '@fontsource-variable/roboto-mono';
 import '../styles/global.css';
 import Seo from '../components/seo/Seo.astro';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import { profile } from '../data/profile';
 // Preload the two text fonts so headings and mono labels do not repaint after the CSS loads.
-import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
-import monoLatin from '@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url';
+import interLatin from '@fontsource-variable/roboto/files/roboto-latin-wght-normal.woff2?url';
+import monoLatin from '@fontsource-variable/montserrat/files/montserrat-latin-wght-normal.woff2?url';
 
 interface Props {
   /** Page title without the site suffix. Omit on the home page. */

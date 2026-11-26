@@ -16,8 +16,8 @@ const H = 630;
 const SCALE = 2; // render at 2x, then downsample for cleaner edges
 
 const fileUrl = (p) => pathToFileURL(join(root, p)).href;
-const inter = fileUrl('node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2');
-const mono = fileUrl('node_modules/@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2');
+const inter = fileUrl('node_modules/@fontsource-variable/montserrat/files/montserrat-latin-wght-normal.woff2');
+const mono = fileUrl('node_modules/@fontsource-variable/roboto-mono/files/roboto-mono-latin-wght-normal.woff2');
 const mark = fileUrl('src/assets/brand/sq-512.png');
 
 // qPCR motif: sigmoid amplification curves with shifted Ct values.

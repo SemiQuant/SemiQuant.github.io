@@ -19,14 +19,15 @@ export const profile = {
   headshot: null as string | null,
   links: [
     { label: 'GitHub', url: 'https://github.com/SemiQuant', me: true },
+    { label: 'ORCID', url: 'https://orcid.org/0000-0002-7893-8416', me: true },
+    { label: 'Google Scholar', url: 'https://scholar.google.com/citations?user=4GFi9-AAAAAJ', me: true },
+    { label: 'Scopus', url: 'https://www.scopus.com/authid/detail.uri?authorId=57189046323', me: false },
     { label: 'PubMed', url: 'https://www.ncbi.nlm.nih.gov/myncbi/jason.limberis.2/bibliography/public/', me: false },
     { label: 'protocols.io', url: 'https://www.protocols.io/researchers/jason-limberis1', me: true },
     { label: 'LinkedIn', url: 'https://www.linkedin.com/in/jason-limberis-aba448144/', me: true },
     { label: 'ResearchGate', url: 'https://www.researchgate.net/profile/Jason_Limberis', me: true },
     { label: 'DrDx.Me', url: 'https://drdx.ucsf.edu/', me: false },
     // Add when available:
-    // { label: 'ORCID', url: 'https://orcid.org/0000-0000-0000-0000', me: true },
-    // { label: 'Google Scholar', url: 'https://scholar.google.com/citations?user=', me: true },
   ],
   cvPdf: '/files/Jason-Limberis-CV.pdf',
 } as const;
